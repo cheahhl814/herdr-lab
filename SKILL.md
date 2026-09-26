@@ -1,5 +1,5 @@
 ---
-name: herdr-skill+
+name: herdr-skill-plus
 description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
 version: 0.16.0
 updated: "2026-09-24"
@@ -302,7 +302,7 @@ Quiz item types map onto the tool's parameters as follows. Where features (previ
 
 **Per-item loop** (one item = one push-UI question call, repeated until the quiz is exhausted — never batch more than one quiz item into a single call, because then per-item wrong-answer coaching has to wait until the whole batch resolves and the `Submit` review tab swallows intermediate feedback. On Claude Code / OpenCode, "one item per call" is even more strictly required because the host has no Submit review tab at all):
 
-   a. Author the item. `header` ≤16 chars (e.g. `Q3 / 6: SAM flags`). Mark the correct option `(Recommended)` only if you're using it as the *default* choice during cold review — for graded items, do NOT mark correct; let the student earn it. The student can press Enter on a blank tab to reveal nothing; that's the right behavior for recall.
+   a. Author the item. `header` ≤16 chars (e.g. `Q3 / 6: SAM flags`). Mark the correct option `(Recommended)` only if you're using it as the *default* choice during cold review — for graded items, do NOT mark correct; let the student earn it. The student can press Enter on a blank tab to reveal nothing; that's the right behavior for recall. Vary the correct option's position across items (see anti-patterns) — `ask_user_question` renders options in declaration order, so author them in the order you want displayed.
    b. The push-UI question tool — one blocking tool call. Agent emits zero tokens while the student answers. (See the *Host equivalents* table near the top of §6 for how each host renders this.)
    c. **On correct answer**: narrate the *why* (which property of the data triggered the right choice), then issue the next item in the same turn.
    d. **On wrong answer**: narrate the mistake before revealing the right answer ("the BAM index `.bai` is required because samtools random-access loads by `BAI` range, not the full file"). Use the `notes` field if the student added reasoning — it's on the answer envelope and reaches you as `user notes: <text>`.
@@ -315,6 +315,7 @@ Quiz item types map onto the tool's parameters as follows. Where features (previ
 
 - NEVER batch 2+ quiz items into one push-UI question call — the `Submit` tab (Pi only) batches them but defers feedback until all are answered, which defeats per-item coaching. On Claude Code / OpenCode the same batching is even worse: the host has no review tab and answers in declaration order.
 - NEVER mark the correct option `(Recommended)` on a graded MCQ — that hints at the answer and removes the recall value. `(Recommended)` belongs only on workflow gates like §6 ("just pressed Enter = happy path").
+- NEVER render the correct option in a predictable position. LLM authoring bias drafts the right answer first and invents distractors after it; because options render in declaration order, a student can pattern-match "first option = answer" within two items and pass on position, not recall (observed 2026-09-25: 5/5 optioned items had the correct answer first). Shuffle option order per item and never place the correct answer first in two consecutive optioned items. The schema's inline `correct` flag is position-independent, so shuffling before writing the call costs nothing.
 - NEVER use the `notes` field to smuggle the answer in — the student can read it; it's for *student → model* reasoning, not the reverse.
 - NEVER run quiz commands in the agent's own pane — type them in the student pane only (§6 rule carries over).
 - If the push-UI question tool is unavailable, the model has no equivalent fallback for graded MCQ (a `wait_output` regex can't capture a radio choice). In that host, end the quiz with a chat note and a `herdr_pane close` — do not invent a polling replacement.
