@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.17.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.18.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.17.0** (updated 2026-09-29). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.18.0** (updated 2026-09-29). See [Changelog](#changelog) below for what changed.
 
 ## Contents
 
@@ -213,6 +213,17 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Source-text sovereignty** — `bin/quiz-import-pdf.py --llm-stdin` accepts text the user pipes in; the script never *fetches* anything. Rights stay with the user.
 
 ## Changelog
+
+### v0.18.0 (2026-09-29)
+
+**Standardized tutorial/quiz course format (hlab-course.v1) + `bin/course-vet.py`.** Goal: consistent §6/§7 performance across hosts, sessions, and models by moving the three judgment-heavy checks onto written data.
+
+- **`course.schema.v1.json`** — schema for the parsed `course.yaml` manifest: `schema: herdr-lab/course.v1`, `name`, `shell` (fish-aware snippet flagging), optional `scratch_setup`, `passing_score` (default 0.8), ordered `modules[].{id,title,lessons[]}`. Kills layout drift between courses (the `week-N-*` vs `lessons/<slug>` split).
+- **Lesson frontmatter** — `id` (== dir slug), `module`, `title`, `objectives[]`, plus optional `difficulty`, `est_minutes`, `prerequisites[]`, `quiz`. Replaces prose metadata like "Phase 1 · est. 2–3 h".
+- **`steps.schema.v1.json` + optional `steps.json`** — machine-readable §6 step gates: `instruction` (the §6 chat string), `accept[]` (command + genuine variants — the §6 step-(b) "valid variant" check as data), `output_fragment` / `silent: true` (deterministic non-empty proof / buffer-growth check), optional `recorded: <rehearsal transcript>`. The §6 hidden-tab rehearsal stays agent-driven (vet grades the evidence, never runs commands).
+- **`quiz.schema.v1.json` v1 extensions** (additive, back-compatible): `items[].objectives[]` (slug tags → vet coverage + §7 closing summary names objectives), `items[].points` (weighted scoring vs `passing_score`), `items[].accepted_synonyms[]` on `short` items (fixed free-text adjudication set instead of per-run judgment).
+- **`bin/course-vet.py`** — the vet-first enforcement point (PyYAML required, jsonschema optional with structural fallback): manifest + frontmatter + steps + quiz validation, orphan-lesson detection, and the 2026-09-25 option-position anti-pattern audited across consecutive optioned items. Read-only by design.
+- SKILL.md §6 gains the vet-first rule + format contract; §6 step (b) and §7 steps e/summary now consume the new fields. algal-wgs retrofitted as the reference implementation.
 
 ### v0.17.0 (2026-09-29)
 

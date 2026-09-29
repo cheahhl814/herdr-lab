@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cheahhl814/herdr-lab/steps.schema.v1.json",
+  "title": "Herdr-lab lesson step gates (hlab-course.v1)",
+  "description": "Optional per-lesson steps.json: machine-readable step gates that turn SKILL.md s6's step-(b) evidence check from LLM judgment into data. One file per lesson, sibling of exercises.md. Every step the student is gated on gets an entry: what the agent dictates, which command forms count (canonical + valid variants), what output fragment proves non-empty success, whether the command is silent. course-vet.py validates shape and (with --rehearse) that 'recorded' rehearsal evidence files exist and contain the expected fragments; the agent still performs the live hidden-tab rehearsal per SKILL.md s6 - vet is the checkpoint, not the runner.",
+  "type": "object",
+  "required": ["schema", "lesson_id", "steps"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "herdr-lab/steps.v1",
+      "description": "Format version."
+    },
+    "lesson_id": {
+      "type": "string",
+      "description": "Must match the lesson frontmatter 'id'."
+    },
+    "shell_override": {
+      "type": "string",
+      "enum": ["bash", "fish", "zsh"],
+      "description": "Only when a lesson runs under a different shell than the course manifest declares (e.g. a fish-specific step inside a bash course). Absent = inherit course.shell."
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Steps in gate order; must be a subset of the lesson's exercises.md prose (steps.json never introduces new commands - it formalizes gate evidence for steps already taught).",
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "$defs": {
+    "step": {
+      "type": "object",
+      "required": ["id", "instruction", "accept"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable step id (alphanumeric-dash), e.g. 's1-raw-qc'. Referenced by quiz task items' task_id."
+        },
+        "instruction": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Text the agent issues as the chat instruction - the same string s6 step 3 dictates, so vet can re-derive s6 behavior from data."
+        },
+        "accept": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Command forms that count as the step being executed (s6 step b 'valid variant' check). Matched as: exact string equal, or the pane buffer line stripped of 'cd X && ' prefixes equal. Case-sensitive. Keep the canonical form first; add only genuinely equivalent variants (flag abbreviations, reordered flags). Do NOT add regexes - this field is for literal command matching, not fuzzy parsing.",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "output_fragment": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Any one of these fragments appearing in the pane buffer after the accepted command proves non-empty genuine output. Empty array = the command is expected to be silent (use 'silent': true style instead - for silent commands s6 falls back to the buffer-growth check and does not require a fragment). Mutually exclusive with silent:true."
+        },
+        "silent": {
+          "type": "boolean",
+          "default": false,
+          "description": "True when the correct execution produces no output (cd, export, mkdir without -p is NOT silent). Vet + s6 then require buffer growth, not a fragment match."
+        },
+        "recorded": {
+          "type": "string",
+          "description": "Optional relative path from the lesson dir to a rehearsal transcript holding this step's real output (the s6 hidden-tab rehearsal recipe writes these). When present and it contains output_fragment, vet --rehearse cites file-vs-step instead of agent recall."
+        },
+        "note": {
+          "type": "string",
+          "description": "Gate-relevant context the agent must check manually (e.g. 'crash is the EXPECTED outcome for the Raph troubleshooting drill - route to the discussion branch, not the error branch')."
+        }
+      }
+    }
+  }
+}

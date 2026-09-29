@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cheahhl814/herdr-lab/course.schema.v1.json",
+  "title": "Herdr-lab course manifest (herdr-lab/course.v1)",
+  "description": "Validates the parsed course.yaml manifest. The YAML on disk is the human-edited source of truth; course-vet.py parses it with PyYAML and validates against this schema. A manifest is the contract between a course author and herdr-lab §6/§7: it declares the canonical lesson layout, the module grouping, the student shell (so snippets adapt - fish $status vs bash $?), the scratch bootstrap, and the quiz passing score. Markdown stays the spine (see SKILL.md s6 Course-content-intake); this manifest only makes the spine navigable and machine-checkable.",
+  "type": "object",
+  "required": ["schema", "name", "modules"],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "herdr-lab/course.v1",
+      "description": "Format version. herdr-lab treats unknown values as 'unsupported' and tells the agent, rather than guessing."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Course slug, lowercase kebab (e.g. 'algal-wgs'). Used for pane/tab labels and score files."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable course title for chat summaries."
+    },
+    "shell": {
+      "type": "string",
+      "enum": ["bash", "fish", "zsh"],
+      "default": "bash",
+      "description": "The shell in which lesson exercises are expected to run. §6 uses this to flag snippet crossovers (fish: $status vs $?, 'set VAR val' vs export) before dictating a command."
+    },
+    "scratch_setup": {
+      "type": "string",
+      "description": "Path (relative to the course root) of a script that bootstraps the pane's scratch cwd before lesson 01 (downloads fixtures, seeds directories). §6 runs it once via herdr_pane run at pane setup if present; the agent narrates every line it runs."
+    },
+    "passing_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.8,
+      "description": "Fraction of quiz points required for the §7 closing summary to declare a pass. Points come from items[].points; unweighted items count 1."
+    },
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered modules; lesson order inside a module is the teaching order across the whole course (depth-first).",
+      "items": {
+        "type": "object",
+        "required": ["id", "lessons"],
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Module slug (e.g. 'phase-1'). Referenced by lesson frontmatter 'module'."
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable module title."
+          },
+          "lessons": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "description": "Lesson directory slugs, in teaching order. Each must contain README.md and match a lessons/ directory sibling-of-manifest.",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

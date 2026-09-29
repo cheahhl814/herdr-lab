@@ -92,6 +92,22 @@
           "type": "object",
           "description": "Per-item source pointer (page, snippet, generated-by). Same structure as the top-level 'source.provenance' if needed.",
           "additionalProperties": true
+        },
+        "objectives": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Lesson-objective slugs (matching lesson frontmatter objectives[]) this item tests. course-vet.py uses this for coverage: every objective should be tagged by at least one item (warning only), and item tagging an undeclared objective is an error. The s7 closing summary names objectives for wrong answers instead of generic advice."
+        },
+        "points": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Point value for scoring. Default 1 when absent. s7's summary divides earned points by total and compares with the course manifest's passing_score."
+        },
+        "accepted_synonyms": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "For 'short' items only: additional accepted free-text forms beside answer_key. Fixes s7's recall adjudication to a written set instead of per-run judgment (obs-2026-09-25: 'ls -la' accepted for 'ls -a'). Compare case-insensitively after whitespace-trim; answer_key and every accepted_synonyms entry count as equal.",
+          "minItems": 1
         }
       }
     },
