@@ -1,15 +1,15 @@
-# herdr-skill+
+# herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.16.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.17.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
 Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm/debate with other agents (cross-examine a design, devil's advocate, second opinion with critique), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, runs a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, or imports a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD). **Workflow-only** — tool schemas (`herdr_layout`, `herdr_pane`, `herdr_agent`) are the source of truth for parameters. Complements the [official herdr skill](https://github.com/herdr).
 
-**Repository**: https://github.com/cheahhl814/herdr-skill-plus
+**Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.16.0** (updated 2026-09-24). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.17.0** (updated 2026-09-29). See [Changelog](#changelog) below for what changed.
 
 ## Contents
 
@@ -36,8 +36,8 @@ This is an **agent skill**, not a user-facing library. There is no `pixi.toml` a
 **Option A — give your agent this prompt (recommended):**
 
 ```text
-Install the herdr-skill+ skill from
-https://github.com/cheahhl814/herdr-skill-plus —
+Install the herdr-lab skill from
+https://github.com/cheahhl814/herdr-lab —
 clone it into your agent's skills directory (the path your agent watches
 for skills). Then read SKILL.md to understand its phases (§1 delegation,
 §4.6 provider preflight, §5 sudo pattern, §6 tutorial mode, §7 quiz mode)
@@ -48,10 +48,10 @@ ready.
 **Option B — manual install:**
 
 ```bash
-git clone https://github.com/cheahhl814/herdr-skill-plus.git
+git clone https://github.com/cheahhl814/herdr-lab.git
 # Symlink into your agent's skills directory. On Pi:
 mkdir -p ~/.pi/agent/skills
-ln -sf "$(pwd)/herdr-skill+" ~/.pi/agent/skills/herdr-skill+
+ln -sf "$(pwd)/herdr-lab" ~/.pi/agent/skills/herdr-lab
 ```
 
 The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/quiz-import-pdf.py`) has optional dependencies — see [Authoring & importing courses](#-authoring--importing-courses).
@@ -154,7 +154,7 @@ The importer never auto-generates answer keys — the agent or human fills `q` /
 
 ### `quiz.schema.v1.json` — JSON Schema for §7
 
-JSON Schema 2020-12. Versions as `herdr-skill+/quiz.v1`. Item kinds: `mcq`, `multi`, `preview`, `short`, `task` — one per `ask_user_question` call (never batch).
+JSON Schema 2020-12. Versions as `herdr-lab/quiz.v1`. Item kinds: `mcq`, `multi`, `preview`, `short`, `task` — one per `ask_user_question` call (never batch).
 
 ```bash
 # Validate every quiz-<id>.json in the lesson directory
@@ -174,7 +174,7 @@ for qp in sorted(glob.glob('course-materials/**/quiz-*.json', recursive=True)):
 ## Repo layout
 
 ```text
-herdr-skill+/
+herdr-lab/
 ├── SKILL.md                 # Workflow library: §1-§8 (read sections on demand)
 ├── quiz.schema.v1.json      # JSON Schema 2020-12 for §7 quiz interchange
 ├── README.md                # This file
@@ -214,6 +214,9 @@ git rev-parse --verify origin/main             # upstream HEAD
 
 ## Changelog
 
+### v0.17.0 (2026-09-29)
+
+**Renamed: `herdr-skill+` → `herdr-lab`.** The `+` in the skill/folder name was incompatible with some coding agents (treated as a regex quantifier or rejected by strict `[a-z0-9-]` name parsers). Renamed the skill, folder, symlinks, GitHub repo (`herdr-skill-plus` → `herdr-lab`), schema namespace (`herdr-skill+/quiz.v1` → `herdr-lab/quiz.v1`), and pane metadata tokens (`--source herdr-lab`). Old GitHub URLs keep working via GitHub's automatic redirect. No behavior changes — name only.
 ### v0.16.0 (2026-09-24)
 
 **Three operational rules adopted from community practice** (research into other herdr orchestration skills and parallel-agent workflows):
@@ -294,6 +297,6 @@ Earlier versions (model discovery + provider preflight in §4.6, sudo pattern in
 
 ## Provenance & License
 
-Built with the [bioinfo-skill-creator](https://github.com/cheahhl814/bioinfo-skill-creator) meta-skill (v1.1.0). The flat workflow-library layout (no preflight → run → qc sub-skill chain) is intentional — herdr-skill+ is a **single skill for one human conversational workflow**, not a batch pipeline.
+Built with the [bioinfo-skill-creator](https://github.com/cheahhl814/bioinfo-skill-creator) meta-skill (v1.1.0). The flat workflow-library layout (no preflight → run → qc sub-skill chain) is intentional — herdr-lab is a **single skill for one human conversational workflow**, not a batch pipeline.
 
 Released under the MIT License — see the `LICENSE` file in this repository for details.

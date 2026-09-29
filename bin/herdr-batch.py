@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""herdr-batch.py — interruption-survivable batch ledger for herdr-skill+ §1.6.
+"""herdr-batch.py — interruption-survivable batch ledger for herdr-lab §1.6.
 
 One JSON file per delegation batch. One row per delegated agent. The ledger,
 not the calling agent's context, is the source of truth once a batch outgrows
@@ -153,7 +153,7 @@ def cmd_todo(args) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="herdr-skill+ §1.6 batch ledger (see module docstring)"
+        description="herdr-lab §1.6 batch ledger (see module docstring)"
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 

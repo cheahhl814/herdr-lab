@@ -1,8 +1,8 @@
 ---
-name: herdr-skill-plus
+name: herdr-lab
 description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
-version: 0.16.0
-updated: "2026-09-24"
+version: 0.17.0
+updated: "2026-09-29"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -59,7 +59,7 @@ Herdr tools are opt-in: only use them when the user explicitly invokes this work
 > Pane hygiene: reuse an existing idle-pane shell running (or last running) a compatible harness instead of splitting a new pane per task; keep total panes ≤2 per tab (incl. primary) — a batch of 2+ agents goes into new tabs, not more panes (step 1) — and `herdr_pane close` unused ones once a task's verification completes — panes are a resource, not per-task disposables.
 > Herdr panes run fish — `herdr_pane run` commands must be fish-safe (`$status`, not `$?`); a fish parse error aborts the entire line except the error banner.
 
-> Batch labeling (2+ agents): rename each tab to the task slug right after `tab_create` (`herdr tab rename <tab_id> <label>` — syntax per `docs-corpus/herdr/online-docs-0.8.2/cli-reference.md`), and optionally report sidebar tokens per pane: `herdr pane report-metadata <pane_id> --source herdr-skill --token task=<slug> --token tier=<T0-T3>` (omit `--ttl-ms` to keep tokens until the pane closes; `--source` is ≤80 ASCII chars `[A-Za-z0-9:._-]`). At 3+ tabs this is the difference between navigating the batch and guessing which tab holds what.
+> Batch labeling (2+ agents): rename each tab to the task slug right after `tab_create` (`herdr tab rename <tab_id> <label>` — syntax per `docs-corpus/herdr/online-docs-0.8.2/cli-reference.md`), and optionally report sidebar tokens per pane: `herdr pane report-metadata <pane_id> --source herdr-lab --token task=<slug> --token tier=<T0-T3>` (omit `--ttl-ms` to keep tokens until the pane closes; `--source` is ≤80 ASCII chars `[A-Za-z0-9:._-]`). At 3+ tabs this is the difference between navigating the batch and guessing which tab holds what.
 
 ## §1.5 Worktree merge-back (after a multi-writer batch)
 
