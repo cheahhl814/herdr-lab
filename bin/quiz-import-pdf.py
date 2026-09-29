@@ -196,6 +196,8 @@ def write_steps_skeleton(lesson_dir: Path, lesson_id: str) -> Path:
 
 def scaffold_course_yaml(out_dir: Path, course_name: str, course_title: str, module: str, slug: str) -> Path | None:
     """Create or extend out-dir/course.yaml with this lesson slug."""
+    if not str(module or "").strip():
+        module = "core"  # empty --module must not create an id-less module
     path = out_dir / "course.yaml"
     try:
         import yaml
