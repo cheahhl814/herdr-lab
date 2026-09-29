@@ -1,7 +1,7 @@
 ---
 name: herdr-lab
 description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
-version: 0.18.0
+version: 0.18.1
 updated: "2026-09-29"
 triggers:
   - user mentions Herdr by name

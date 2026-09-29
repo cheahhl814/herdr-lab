@@ -41,12 +41,18 @@ Usage:
     quiz-import-pdf.py --quiz-from course-materials/<course>/<lesson>/exercises.md \\
         --lesson-id ch3-sam-flags --title "SAM flags"
 
-The script produces, per lesson:
-    <out-dir>/<slug>/README.md         (~1500 words lecture / concepts skeleton)
+The script produces, per lesson (hlab-course.v1 layout, default since v0.18.1):
+    <out-dir>/course.yaml              (created/extended with --course-name; else untouched)
+    <out-dir>/README.md                (top-level course README, first lesson only)
+    <out-dir>/lessons/<slug>/README.md (skeleton w/ hlab frontmatter: id/module/title/objectives)
     <out-dir>/<slug>/exercises.md      (typed shell commands skeleton)
+    <out-dir>/<slug>/steps.json        (§6 gate skeleton; fill accept/output_fragment)
     <out-dir>/<slug>/quiz-<id>.json    (matches quiz.schema.v1.json for §7)
     <out-dir>/<slug>/source.txt        (only in --llm-stdin mode; immutable
                                         reference of the user-provided text)
+
+PASS --legacy-layout to keep the pre-v0.18.1 flat layout (out-dir/<slug>/)
+for archives that predate the format.
 
 A multi-chapter PDF's table of contents is hard to parse generically
 (Roman vs Arabic pages, appendix vs body, foreword vs chapter 1).
@@ -64,6 +70,8 @@ import sys
 from pathlib import Path
 
 SCHEMA_REF = "herdr-lab/quiz.v1"
+STEPS_SCHEMA_REF = "herdr-lab/steps.v1"
+COURSE_SCHEMA_REF = "herdr-lab/course.v1"
 
 
 def extract_pdf(path: str, pages: list[int] | None) -> tuple[str, str]:
@@ -104,14 +112,30 @@ def parse_pages(spec: str | None) -> list[int] | None:
     return list(range(lo, hi + 1))
 
 
-def write_lesson_md(lesson_dir: Path, lesson_title: str, source_text: str, source_meta: dict) -> dict[str, Path]:
+def write_lesson_md(
+    lesson_dir: Path,
+    lesson_title: str,
+    source_text: str,
+    source_meta: dict,
+    lesson_id: str,
+    module: str,
+) -> dict[str, Path]:
     lesson_dir.mkdir(parents=True, exist_ok=True)
     frontmatter = (
         "---\n"
+        f"id: {lesson_id}\n"
+        f"module: {module}\n"
         f"title: {lesson_title}\n"
-        f"source: {source_meta.get('path', '?')}\n"
-        f"imported_by: quiz-import-pdf.py\n"
-        f"status: skeleton - agent or human fills content from source_text_excerpt\n"
+        "difficulty: TODO\n"
+        "est_minutes: TODO\n"
+        "objectives:\n"
+        "  - todo-objective-1   # objective slugs referenced by quiz items[].objectives\n"
+        "  - todo-objective-2\n"
+        "  - todo-objective-3\n"
+        "quiz: true\n"
+        "source:\n"
+        f"  path: {source_meta.get('path', '?')}\n"
+        "status: \"skeleton - fill README + exercises + steps + quiz, then set: filled\"\n"
         "---\n\n"
     )
     readme = lesson_dir / "README.md"
@@ -146,6 +170,58 @@ def write_lesson_md(lesson_dir: Path, lesson_title: str, source_text: str, sourc
         encoding="utf-8",
     )
     return {"readme": readme, "exercises": exercises}
+
+
+def write_steps_skeleton(lesson_dir: Path, lesson_id: str) -> Path:
+    """Scaffold the §6 gate contract. Empty until filled: course-vet refuses
+    lessons whose frontmatter still says 'skeleton', so these placeholders
+    cannot be blessed as teachable by accident."""
+    path = lesson_dir / "steps.json"
+    steps = {
+        "schema": STEPS_SCHEMA_REF,
+        "lesson_id": lesson_id,
+        "steps": [
+            {
+                "id": "s1-TODO",
+                "instruction": "TODO: copy the first §6 chat instruction from exercises.md",
+                "accept": ["# TODO: canonical command + genuine variants (min 1)"],
+                "output_fragment": [],
+                "note": "TODO: one row per gated exercise; silent steps use silent:true instead of output_fragment",
+            }
+        ],
+    }
+    path.write_text(json.dumps(steps, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def scaffold_course_yaml(out_dir: Path, course_name: str, course_title: str, module: str, slug: str) -> Path | None:
+    """Create or extend out-dir/course.yaml with this lesson slug."""
+    path = out_dir / "course.yaml"
+    try:
+        import yaml
+    except ImportError:
+        print(f"  (course.yaml not scaffolded: PyYAML missing - create {path} manually)")
+        return None
+    if path.exists():
+        manifest = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        modules = manifest.setdefault("modules", [])
+        target = next((m for m in modules if m.get("id") == module), None)
+        if target is None:
+            target = {"id": module, "lessons": []}
+            modules.append(target)
+        if slug not in target.setdefault("lessons", []):
+            target["lessons"].append(slug)
+    else:
+        manifest = {
+            "schema": COURSE_SCHEMA_REF,
+            "name": course_name,
+            "title": course_title,
+            "shell": "bash",
+            "passing_score": 0.8,
+            "modules": [{"id": module, "lessons": [slug]}],
+        }
+    path.write_text(yaml.safe_dump(manifest, sort_keys=False, allow_unicode=True), encoding="utf-8")
+    return path
 
 
 def build_quiz_skeleton(lesson_id: str, lesson_title: str, source_text: str, source_meta: dict, item_count: int) -> dict:
@@ -188,9 +264,9 @@ def write_top_level_readme(out_dir: Path, course_title: str, source_path: str) -
     return path
 
 
-def write_quiz(out_dir: Path, lesson_slug: str, lesson_id: str, lesson_title: str, source_text: str, source_meta: dict, item_count: int) -> Path:
+def write_quiz(lesson_dir: Path, lesson_id: str, lesson_title: str, source_text: str, source_meta: dict, item_count: int) -> Path:
     quiz = build_quiz_skeleton(lesson_id, lesson_title, source_text, source_meta, item_count)
-    path = out_dir / lesson_slug / f"quiz-{lesson_id}.json"
+    path = lesson_dir / f"quiz-{lesson_id}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(quiz, indent=2) + "\n", encoding="utf-8")
     return path
@@ -278,10 +354,15 @@ def main() -> int:
     ap.add_argument("--items", type=int, default=5, help="Quiz items (default 5)")
     ap.add_argument("--no-quiz", action="store_true", help="Emit README+exercises only; skip quiz-<id>.json")
     ap.add_argument("--out-dir", default="course-materials", help="Output root directory")
+    ap.add_argument("--module", default="core", help="hlab module id for the lesson frontmatter/manifest (default: core)")
+    ap.add_argument("--course-name", default=None, help="Course manifest name; creates or extends out-dir/course.yaml (hlab-course.v1)")
+    ap.add_argument("--course-title", default=None, help="Course title used when course.yaml is first created (default: --title)")
+    ap.add_argument("--legacy-layout", action="store_true", help="Emit flat out-dir/<slug>/ instead of lessons/<slug>/ (pre-v0.18.1)")
     args = ap.parse_args()
 
     emitted: list[Path] = []
     directive_emitted: Path | None = None
+    hlab = not args.legacy_layout
 
     if args.llm_stdin:
         # LLM-mediated fallback: user pipes text into stdin. Script writes
@@ -296,7 +377,7 @@ def main() -> int:
             sys.exit("--llm-stdin: stdin was empty.")
         slug = slugify(args.lesson_id or args.title)
         out_dir = Path(args.out_dir)
-        lesson_dir = out_dir / slug
+        lesson_dir = (out_dir / "lessons" / slug) if hlab else (out_dir / slug)
         lesson_dir.mkdir(parents=True, exist_ok=True)
         source_path = lesson_dir / "source.txt"
         source_path.write_text(text, encoding="utf-8")
@@ -309,10 +390,13 @@ def main() -> int:
         course_readme = out_dir / "README.md"
         if not course_readme.exists():
             emitted.append(write_top_level_readme(out_dir, args.title, str(source_path)))
-        written = write_lesson_md(lesson_dir, args.title, text, source_meta)
+        if args.course_name:
+            emitted.append(scaffold_course_yaml(out_dir, args.course_name, args.course_title or args.title, args.module, slug))
+        written = write_lesson_md(lesson_dir, args.title, text, source_meta, args.lesson_id or slug, args.module)
         emitted.extend(written.values())
+        emitted.append(write_steps_skeleton(lesson_dir, args.lesson_id or slug))
         if not args.no_quiz:
-            qpath = write_quiz(out_dir, slug, args.lesson_id or slug, args.title, text, source_meta, args.items)
+            qpath = write_quiz(lesson_dir, args.lesson_id or slug, args.title, text, source_meta, args.items)
             emitted.append(qpath)
         directive_emitted = write_llm_directive(lesson_dir, args.title, args.lesson_id or slug, text, source_path, args.items)
         emitted.append(directive_emitted)
@@ -322,8 +406,9 @@ def main() -> int:
         text, extracted_by = extract_md(str(src_path))
         slug = src_path.parent.name
         source_meta = {"type": "markdown", "path": str(src_path), "extracted_by": extracted_by}
-        out_dir = src_path.parent.parent
-        quiz_path = write_quiz(out_dir, slug, args.lesson_id or slug, args.title, text, source_meta, args.items)
+        quiz_path = src_path.parent / f"quiz-{args.lesson_id or slug}.json"
+        quiz = build_quiz_skeleton(args.lesson_id or slug, args.title, text, source_meta, args.items)
+        quiz_path.write_text(json.dumps(quiz, indent=2) + "\n", encoding="utf-8")
         emitted.append(quiz_path)
     else:
         # Lesson-import mode (.md or .pdf)
@@ -350,10 +435,16 @@ def main() -> int:
         if not course_readme.exists():
             emitted.append(write_top_level_readme(out_dir, args.title, source_meta["path"]))
 
-        written = write_lesson_md(out_dir / slug, args.title, text, source_meta)
+        lesson_dir = (out_dir / "lessons" / slug) if hlab else (out_dir / slug)
+        if args.course_name and hlab:
+            emitted.append(scaffold_course_yaml(out_dir, args.course_name, args.course_title or args.title, args.module, slug))
+
+        written = write_lesson_md(lesson_dir, args.title, text, source_meta, args.lesson_id or slug, args.module)
         emitted.extend(written.values())
+        if hlab:
+            emitted.append(write_steps_skeleton(lesson_dir, args.lesson_id or slug))
         if not args.no_quiz:
-            qpath = write_quiz(out_dir, slug, args.lesson_id or slug, args.title, text, source_meta, args.items)
+            qpath = write_quiz(lesson_dir, args.lesson_id or slug, args.title, text, source_meta, args.items)
             emitted.append(qpath)
 
     print(f"Wrote {len(emitted)} files:")

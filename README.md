@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.18.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.18.1-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.18.0** (updated 2026-09-29). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.18.1** (updated 2026-09-29). See [Changelog](#changelog) below for what changed.
 
 ## Contents
 
@@ -213,6 +213,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Source-text sovereignty** — `bin/quiz-import-pdf.py --llm-stdin` accepts text the user pipes in; the script never *fetches* anything. Rights stay with the user.
 
 ## Changelog
+
+### v0.18.1 (2026-09-29)
+
+**`quiz-import-pdf.py` now scaffolds hlab-course.v1 natively.** Default layout became `lessons/<slug>/` with full frontmatter (`id`/`module`/`title`/`objectives`), a `steps.json` gate skeleton, and `course.yaml` create-or-extend via `--course-name`/`--course-title`/`--module` (rebuilding a repo lesson only appends its slug — multi-lecture imports converge on one manifest). `--legacy-layout` opts out. `course-vet.py` gained the skeleton guard: a lesson whose frontmatter `status:` starts with `skeleton` FAILS vet with a fill-first error, so freshly scaffolded courses cannot pass as teachable by accident; frontmatter YAML parse errors now report verbatim instead of masquerading as "no frontmatter". Fixes: unquoted colon in scaffold status line broke YAML parsing.
 
 ### v0.18.0 (2026-09-29)
 

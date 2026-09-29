@@ -113,8 +113,8 @@ def read_frontmatter(path: Path) -> dict | None:
         return None
     try:
         return yaml.safe_load(text[3:end]) or {}
-    except yaml.YAMLError:
-        return None
+    except yaml.YAMLError as e:
+        return {"__parse_error__": f"YAML error in frontmatter: {e}"}
 
 
 def listed_slugs(course_dir: Path) -> list[str]:
@@ -183,6 +183,15 @@ def vet_lesson(
     if fm is None:
         rep.err(f"{where}/README.md: no YAML frontmatter block — required by vet (id, module, title, objectives)")
         return
+    if "__parse_error__" in fm:
+        rep.err(f"{where}/README.md: {fm['__parse_error__']}")
+        return
+    if str(fm.get("status") or "").startswith("skeleton"):
+        rep.err(
+            f"{where}/README.md: lesson skeleton unfilled (frontmatter status: {fm['status']!r}) —"
+            " fill README/exercises/steps/quiz from the source before teaching (vet-first rule)"
+        )
+        return  # one clean fill-first error per skeleton lesson; deeper checks are noise until it is filled
     for field in ("id", "title", "objectives"):
         if not fm.get(field):
             rep.err(f"{where}/README.md: frontmatter missing/wrong value for {field!r}")
