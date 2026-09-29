@@ -2,6 +2,9 @@
 context/
 BRIEF.md
 
+# Generated semantic codebase index (regenerable cache: SQLite DB, vectors, worker leases)
+.codebase-index/
+
 # bioinfo-skill-creator run artifact (stale generated metadata, not consumed by the skill)
 params.json
 

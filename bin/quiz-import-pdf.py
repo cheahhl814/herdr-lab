@@ -63,7 +63,7 @@ import re
 import sys
 from pathlib import Path
 
-SCHEMA_REF = "herdr-skill+/quiz.v1"
+SCHEMA_REF = "herdr-lab/quiz.v1"
 
 
 def extract_pdf(path: str, pages: list[int] | None) -> tuple[str, str]:
@@ -156,7 +156,7 @@ def build_quiz_skeleton(lesson_id: str, lesson_title: str, source_text: str, sou
                 "kind": "mcq",
                 "q": f"ITEM {i + 1}: paste the question here, citing the source passage.",
                 "options": [
-                    {"label": "option A (mark correct=true on the right one)"},
+                    {"label": "option A (mark correct=true on the right one; vary which position is correct across items)"},
                     {"label": "option B"},
                     {"label": "option C"},
                     {"label": "option D"},
@@ -253,6 +253,10 @@ def write_llm_directive(lesson_dir: Path, lesson_title: str, lesson_id: str, sou
         "- Do NOT introduce facts not present in `source.txt`. If the source is thin\n"
         "  on a topic, write fewer items rather than hallucinate correct answers.\n"
         "- Do NOT mark more than one option `correct: true` on `mcq` items.\n"
+        "- Vary the position of the correct option across items - never place it\n"
+        "  first in two consecutive optioned items. LLM authoring bias drafts the\n"
+        "  right answer first, and §7 renders options in declaration order, so a\n"
+        "  fixed position lets students pattern-match instead of recalling.\n"
         "- Do NOT batch quiz items into fewer call(s) - §7 enforces one\n"
         "  ask_user_question call per item.\n"
     )

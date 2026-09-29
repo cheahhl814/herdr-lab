@@ -1,15 +1,15 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/cheahhl814/herdr-skill-plus/quiz.schema.v1.json",
+  "$id": "https://github.com/cheahhl814/herdr-lab/quiz.schema.v1.json",
   "title": "Herdr-skill+ Quiz",
-  "description": "Reference interchange schema for quiz / knowledge-check items rendered through herdr-skill+ §7 (ask_user_question gate). Importers (PDF chapters via docs-ingest+pymupdf4llm, literature paper Q&A, or hand-authored) emit this shape so §7 can render each item via the same per-item ask_user_question loop. §7 does not require this schema to be used; agent-authored inline items skip it. Schema v1 is intentionally minimal - one JSON document per quiz, one item per document line. Promoting schema-specific fields to required makes importers harder, not easier.",
+  "description": "Reference interchange schema for quiz / knowledge-check items rendered through herdr-lab §7 (ask_user_question gate). Importers (PDF chapters via docs-ingest+pymupdf4llm, literature paper Q&A, or hand-authored) emit this shape so §7 can render each item via the same per-item ask_user_question loop. §7 does not require this schema to be used; agent-authored inline items skip it. Schema v1 is intentionally minimal - one JSON document per quiz, one item per document line. Promoting schema-specific fields to required makes importers harder, not easier.",
   "type": "object",
   "required": ["schema", "title", "items"],
   "additionalProperties": true,
   "properties": {
     "schema": {
       "type": "string",
-      "const": "herdr-skill+/quiz.v1",
+      "const": "herdr-lab/quiz.v1",
       "description": "Schema URI / version. Bump the suffix when adding a breaking field. v1 = ask_user_question primitives only (2026-09-15)."
     },
     "title": {
@@ -65,7 +65,7 @@
           "type": "array",
           "minItems": 1,
           "maxItems": 4,
-          "description": "Required for mcq / multi / preview (2-4 options); optional / forbidden for short and task. When omitted for short, the host appends its 'Type something.' row at runtime.",
+          "description": "Required for mcq / multi / preview (2-4 options); optional / forbidden for short and task. When omitted for short, the host appends its 'Type something.' row at runtime. Rendered in declaration order by §7 - vary the correct option's position across items so students cannot pattern-match it (see SKILL.md §7 anti-patterns).",
           "items": { "$ref": "#/$defs/option" }
         },
         "answer_key": {
