@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.20.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.20.1-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.20.0** (updated 2026-09-30). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.20.1** (updated 2026-09-30). See [Changelog](#changelog) below for what changed.
 
 ## Contents
 
@@ -213,6 +213,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Source-text sovereignty** — `bin/quiz-import-pdf.py --llm-stdin` accepts text the user pipes in; the script never *fetches* anything. Rights stay with the user.
 
 ## Changelog
+
+### v0.20.1 (2026-09-30)
+
+**Card placement now depends on the host.** v0.19.0 put every lesson card inside the ask-user dialog, but Claude Code (and OpenCode / RPC hosts) trim long `question`/`preview` text, so instructions were cut off. Pi still gets the card inside the dialog, since its dialog scrolls and never trims. On other hosts the card goes in chat right before a compact dialog (a one-line question, no lesson preview), so the dialog covers as little chat as possible.
 
 ### v0.20.0 (2026-09-30)
 
