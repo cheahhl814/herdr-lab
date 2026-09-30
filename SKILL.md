@@ -1,7 +1,7 @@
 ---
 name: herdr-lab
-description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
-version: 0.20.1
+description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, wants a silent companion that troubleshoots their own terminal pane only when asked (Warp-style), or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
+version: 0.21.0
 updated: "2026-09-30"
 triggers:
   - user mentions Herdr by name
@@ -18,6 +18,7 @@ triggers:
   - teach/tutor the user on CLI or bioinformatics commands hands-on in a side pane
   - run a quiz / knowledge-check in a side pane (MCQ, spot-the-bug, task items)
   - brainstorm / debate / get a second opinion *with critique* together with other agents (bidirectional §8 mode, not a one-shot opinion poll)
+  - be my companion / watch my terminal and help when something breaks / look at my pane, why did that fail? (§9)
   - import a course from PDF / Markdown into a Markdown spine (lesson = README+exercises+quiz-N.json)
   - import a course from any text source via bin/quiz-import-pdf.py --llm-stdin (YouTube transcript, Notion export, lecture notes)
   - author a new course or extend an existing one in the Markdown spine + JSON quiz schema
@@ -403,6 +404,35 @@ EVIDENCE: <file:line, command output, citation — or "reasoning only">
 - NEVER let the question change mid-brainstorm — restate it verbatim in every relay; a new scope means a new brainstorm.
 - NEVER relay a partial round — every seat settles and passes the contract check first (round barrier above).
 - NEVER accept `CHANGED: yes` without a verified named argument — that is how sycophancy shows up.
+
+## §9 Companion mode (on-call troubleshooter)
+
+The user works in their own pane; you stay **silent until asked**, then read that pane to help (like Warp's in-terminal AI). This is the opposite of §6: there you keep the turn alive with gates, here you **end your turn** and spend zero tokens while the user works. There is no gate, no `ask_user_question`, no `wait_output`, and no polling.
+
+**Attach (one turn):**
+
+1. Resolve the pane to watch. If the user names an existing pane or tab, use `herdr_layout pane_list` / `tab_list` and take the ID Herdr returns (never construct one). Otherwise `herdr_layout pane_split` with `focus: true`. Several panes are fine; keep a watch list of `{pane_id, label, created_by_me}`.
+2. `herdr_pane get` once to note cwd and shell (the fish caveat from §1 applies to anything you suggest).
+3. Reply with one line — `Companion on <label>. Work as usual; message me when something breaks ("help", "why did that fail?").` — and **end your turn**.
+
+**On the user's call:**
+
+1. `herdr_pane read` the watched pane (`recent-unwrapped`, ~200 lines; more if the output is long). A vague "help" means the most recent failure: a non-zero exit, an error or traceback, a usage message, or a hung command. With several watched panes, read the one they name, else the one with the most recent failure, and say which one you read.
+2. Decide whether the command is still running (no trailing prompt; `herdr_pane get` shows the foreground process) or finished — "it's stuck" and "it failed" need different answers.
+3. Diagnose from the evidence: quote the exact error line, then give the cause. You may investigate read-only **in your own shell** (`--help`, versions, `ls`, reading a config or a log the error names). Never do this in the user's pane.
+4. Give the fix as a command in a fenced block **for the user to run**. Type into their pane (`herdr_pane run`, one command) only when they explicitly ask ("run it", "do it for me"), and confirm first if the command deletes, overwrites, or is hard to undo. Never send `Ctrl-C` or other keys to a running process unless asked. sudo and secret prompts go through §5.
+5. End your turn again — back to silent. On "try again" / "check now", re-read and confirm from the new output, not from memory.
+
+**Detach** on "stop companion" / "done": drop the watch list. Close only panes you created (`created_by_me`), and only if the user doesn't want to keep them. Never close a pane the user brought.
+
+If the user wants to *learn* the fix rather than just get it, offer to switch that problem to §6 with their preferred pedagogy stance.
+
+**Anti-patterns:**
+
+- NEVER watch, poll, or `wait_output` between calls — silence is the feature.
+- NEVER comment on things they didn't ask about (shell history, style, unrelated warnings) unless they block the fix.
+- NEVER echo secrets from the buffer (tokens, passwords, keys in env dumps or URLs) — refer to them as `<redacted>`.
+- NEVER diagnose from a stale read — if the user ran something since your last read, read again.
 
 ---
 

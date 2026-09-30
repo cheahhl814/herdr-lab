@@ -1,15 +1,15 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.20.1-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.21.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
-Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm/debate with other agents (cross-examine a design, devil's advocate, second opinion with critique), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, runs a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, or imports a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD). **Workflow-only** — tool schemas (`herdr_layout`, `herdr_pane`, `herdr_agent`) are the source of truth for parameters. Complements the [official herdr skill](https://github.com/herdr).
+Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm/debate with other agents (cross-examine a design, devil's advocate, second opinion with critique), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, runs a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, wants a silent companion that troubleshoots their own terminal pane only when asked (Warp-style), or imports a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD). **Workflow-only** — tool schemas (`herdr_layout`, `herdr_pane`, `herdr_agent`) are the source of truth for parameters. Complements the [official herdr skill](https://github.com/herdr).
 
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.20.1** (updated 2026-09-30). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.21.0** (updated 2026-09-30). See [Changelog](#changelog) below for what changed.
 
 ## Contents
 
@@ -72,6 +72,7 @@ The skill is **not** a phased pipeline (no preflight → run → qc chain). It i
 | §6 | CLI / bioinformatics tutorial mode (human-driven pane) | "tutor me on samtools", "teach me this", "run me through chapter 3" |
 | §7 | Quiz / knowledge-check mode (human-driven pane) | "quiz me on chapter 3", "test me on …", mixed MCQ + spot-the-bug + task items |
 | §8 | Multi-agent brainstorming mode (bidirectional) | "brainstorm with another agent", "debate these two designs", "devil's advocate", "get a second opinion with critique", "have the agents argue it out and converge" |
+| §9 | Companion mode (on-call troubleshooter) | "be my companion", "watch my terminal and help when it breaks", "why did that fail?" |
 
 > [!TIP]
 > Every gated decision in §4-§7 surfaces back to the user via `ask_user_question` (Evidence + Recommend + Options) rather than auto-picking. This mirrors how Claude Code and OpenCode surface their permission prompts.
@@ -213,6 +214,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Source-text sovereignty** — `bin/quiz-import-pdf.py --llm-stdin` accepts text the user pipes in; the script never *fetches* anything. Rights stay with the user.
 
 ## Changelog
+
+### v0.21.0 (2026-09-30)
+
+**New §9 companion mode.** The agent attaches to the user's pane (or opens one), replies with one line, and ends its turn: no gates, no polling, zero tokens while the user works. When the user asks for help, it reads the pane, finds the most recent failure or hang, quotes the error line, investigates read-only in its own shell, and gives a fix for the user to run. It types into the user's pane only when asked (with confirmation for destructive commands), redacts secrets, and on detach closes only panes it created.
 
 ### v0.20.1 (2026-09-30)
 
