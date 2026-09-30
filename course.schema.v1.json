@@ -22,6 +22,12 @@
       "type": "string",
       "description": "Human-readable course title for chat summaries."
     },
+    "pedagogy": {
+      "type": "string",
+      "enum": ["constructivist", "heutagogy", "heuristagogy", "drill"],
+      "default": "constructivist",
+      "description": "Default teaching stance for s6/s7 (see SKILL.md Pedagogy stance). The student's in-session request overrides it."
+    },
     "shell": {
       "type": "string",
       "enum": ["bash", "fish", "zsh"],
