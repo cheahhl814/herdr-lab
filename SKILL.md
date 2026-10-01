@@ -1,8 +1,8 @@
 ---
 name: herdr-lab
-description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, wants a silent companion that troubleshoots their own terminal pane only when asked (Warp-style), or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
-version: 0.21.0
-updated: "2026-09-30"
+description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine a design, devil's advocate, second opinion with critique, converge on a decision between agents), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, run a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, wants a silent companion that troubleshoots their own terminal pane only when asked (Warp-style), start a deck-led course (HTML lecture deck for students with no prior knowledge, in the browser via html-template-pack + practice pane, self-paced companion or task-giving trainer — also for non-CLI concept courses), or import a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD) into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth for parameters. Complements the official herdr skill.
+version: 0.22.0
+updated: "2026-10-01"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -18,6 +18,8 @@ triggers:
   - teach/tutor the user on CLI or bioinformatics commands hands-on in a side pane
   - run a quiz / knowledge-check in a side pane (MCQ, spot-the-bug, task items)
   - brainstorm / debate / get a second opinion *with critique* together with other agents (bidirectional §8 mode, not a one-shot opinion poll)
+  - start / launch a course with an HTML slide deck in the browser + practice pane; self-paced companion or trainer drive (§10)
+  - build / author an HTML lecture deck for a course lesson, assuming no prior knowledge (html-template-pack slide template, §10)
   - be my companion / watch my terminal and help when something breaks / look at my pane, why did that fail? (§9)
   - import a course from PDF / Markdown into a Markdown spine (lesson = README+exercises+quiz-N.json)
   - import a course from any text source via bin/quiz-import-pdf.py --llm-stdin (YouTube transcript, Notion export, lecture notes)
@@ -27,6 +29,7 @@ requires:
   - pi-herdr plugin installed and active (HERDR_PANE_ID set)
   - HERDR_ENV=1
   - docs-corpus/ present relative to SKILL.md
+  - html-template-pack skill (optional; §10 deck-led courses only — github.com/cheahhl814/html-template-pack)
 ---
 
 # Herdr delegation workflow
@@ -433,6 +436,61 @@ If the user wants to *learn* the fix rather than just get it, offer to switch th
 - NEVER comment on things they didn't ask about (shell history, style, unrelated warnings) unless they block the fix.
 - NEVER echo secrets from the buffer (tokens, passwords, keys in env dumps or URLs) — refer to them as `<redacted>`.
 - NEVER diagnose from a stale read — if the user ran something since your last read, read again.
+
+## §10 Deck-led course mode (HTML slides + practice pane)
+
+The lesson is taught by an **HTML lecture deck in the student's browser**, written for a student with no prior knowledge of the subject (see *Deck authoring*); the herdr pane is only for practice. The student reads and flips slides at their own pace, and you either stay silent until called (§9 style) or train them with tasks (§6 gates). This fixes two §6/§7 limits: reading lesson text in agent output is dull, and concept-only courses (no shell) had no home.
+
+**Dependency: `html-template-pack`** (external skill, [github.com/cheahhl814/html-template-pack](https://github.com/cheahhl814/html-template-pack)). Find it in your skills dir (`~/.claude/skills/`, `~/.pi/agent/skills/`, `~/.agents/skills/`); if it is missing, tell the user and offer `git clone https://github.com/cheahhl814/html-template-pack ~/.agents/skills/html-template-pack`. Read its `SKILL.md` before authoring a deck. Its slide template and components are the source of truth for markup — this section only adds the course conventions below.
+
+**Deck authoring (once per lesson, not per session).** A deck is course content: author it, vet it, reuse it.
+
+A deck is a **lecture**, not a summary. Assume the student knows nothing about the subject: a student with only the deck and the practice pane must be able to learn the lesson without asking you anything.
+
+- **Teach from the source, not the lesson README.** The README is a summary. Read the full source (the lesson frontmatter's `source.path`, `sources/` in the course) and teach every point the lesson's `objectives[]` and quiz items depend on, within the lesson's scope (leave later lessons' topics to them).
+- **Start with why.** Open with the problem the topic solves, in everyday terms, before any command or tool name.
+- **Define every term the first time it appears**, in plain words, including the ones experts forget are jargon (terminal vs shell, directory, path, argument, package, dependency, environment, version, TOML…). A `.card.info` "New word" box works well.
+- **Explain, then show, then do**, for every command: (1) a concept slide on what the command is for and how its parts are built; (2) a worked-example slide with the command *and real output*, labelling what each part of the output means; (3) the practice slide. Never put a command on a practice slide that wasn't explained and shown first.
+- **One idea per slide**, prefer diagrams (the pack's `.flow`, `.chain-step`, `.layer-stack`, tables) to paragraphs, and keep each slide to ≤~80 words of prose.
+- **End with a recap** (a table: command → what it does), common mistakes, and a closing slide that hands off to the quiz.
+- Lecture decks run ~15–25 slides, longer than the pack's ≤12-slide guideline for presentations. Split a lesson across two decks rather than squeezing one.
+
+1. Write only the slides: a fragment of `<section class="slide" …>` blocks (first one with class `active`) using the components from the pack's slide template: title slide (objectives) → why → (concept → worked example → practice)× → recap → closing slide ("ask your agent for the quiz").
+2. `bin/course-deck.py lessons/<slug> < slides.html` wraps the fragment in the template. It drops every Template Reference slide, sets `<title>`, namespaces annotation storage as `<course>-<slug>` (so slide notes don't collide across lessons), adds the `details.hint` style, and adds `deck: deck.html` to the frontmatter. Re-running it overwrites the deck. Annotations and JSON export stay on — they are the student's notebook.
+3. **Practice slide = one `steps.json` step.** Put `data-step="<step id>"` on its `<section class="slide">`. The slide shows the *goal*, a *predict first* prompt, and *what to look for in the output* under the course's pedagogy stance: under `drill` it shows the command; otherwise the *exact* practice command is never in plain view. The worked example before it uses the same command on a different target (`cd /bin` in the example, `cd ..` in the task), so the student transfers it instead of copying. Put the hint ladder in native `<details class="hint">` blocks, one per rung (① concept → ② flag/man section → ③ partial command → ④ full command), so a self-paced student can unfold hints without you. End each practice slide with: *"Run it in the practice pane. Stuck? Ask your agent: 'check task `<step id>`'."*
+4. **The command a student copies from the slide must pass the gate.** `accept[]` is exact-match, so write rung ④ (or the `drill` command) as an `accept[]` form, one command per line. Write `cd ..` / `pwd` on separate lines, not `cd .. && pwd`, unless that compound form is itself in `accept[]`. If the slide teaches a genuinely equivalent variant, add it to `accept[]` instead.
+5. Fact-check every *look for* line against real output: run the steps in a throwaway copy (the §6 rehearsal recipe). The student's machine config can differ from the docs (for example, global default channels), so word those lines to allow it.
+6. Concept-only lessons (no shell) have no practice slides and no `steps.json`. Check understanding with the §7 quiz instead, and add `kind: task` items only when a lesson has steps.
+7. Run `bin/course-vet.py <course>`. It checks that the deck exists, that every `data-step` resolves to a step id, that no template slides are left, and warns when a practice slide shows no `accept[]` form verbatim. Then open the deck once and flip through it: a practice slide should fit a laptop screen (~1366×768) with its hints collapsed.
+
+**Start a course (one turn):**
+
+1. Vet first (§6 rule). Pick the lesson: the next one in `modules[]` order, or the one the student names.
+2. **Open the deck in the browser** from your own shell: `xdg-open lessons/<slug>/deck.html` (Linux), `open …` (macOS), `wslview …` (WSL). The deck is self-contained, so `file://` works. Headless or SSH session: run `python3 -m http.server 8765 --directory <course-dir>` in a background herdr tab (`focus: false`) and give the student `http://localhost:8765/lessons/<slug>/deck.html` (they forward the port). Close that tab at detach.
+3. **Practice pane**, only if the lesson has steps: `herdr_layout pane_split` with `focus: true` into the scratch dir, and run `scratch_setup` once (as in §6).
+4. Ask the **drive mode** with one push-UI question (skip it if the student already said):
+   - `Companion — I'll go at my own pace (Recommended)` — the student drives. Use §9 for the rest of the lesson.
+   - `Trainer — give me tasks` — you drive. Use the §6 step-gate loop with the cards below.
+
+**Companion drive (§9 + deck).** Reply with one line (`Deck open, practice pane on the right. Flip slides with ←/→; message me "check task s2" or "help" anytime.`) and end your turn. When the student calls:
+
+- **"check task `<id>`"** (or "slide N" → map the slide to its `data-step`): `herdr_pane read` and run that step's `steps.json` evidence check (`accept[]` / `output_fragment` / `silent`). Reply with ≤3 lines: confirmed + one sentence on what the output means, or not yet + the stance-appropriate next hint rung (never the full command first, unless `drill`). Then end your turn again.
+- **"help" / "why did that fail?"**: §9 on-call diagnosis, unchanged.
+- **A concept question about a slide**: answer in ≤5 lines and point back to the slide. Don't re-teach the deck.
+- **"quiz me" / reaching the closing slide**: switch to §7 for that lesson's `quiz-*.json`, in the same pane.
+
+**Trainer drive (§6 + deck).** Run the §6 step-gate loop, with one change: **the deck carries the content, so the lesson card is a pointer, not a lecture.** A card is ≤5 lines: `Slide 5 · task s2-header` → the goal in one line → the previous step's result feedback (≤2 sentences) → the return cue. Gate options, evidence check, hint ladder, retry cap, and pedagogy stance all stay as in §6, so card placement matters less here because the card is short on every host. After the last practice slide, run §7 in the same turn.
+
+**Detach / end of lesson:** on "done", the end of the lesson, or the end of the quiz: close the practice pane and any http.server tab you created. Leave the browser tab open (the student's annotations live there). Offer the next lesson's deck.
+
+**Anti-patterns:**
+
+- NEVER regenerate a deck at session start — author it once, vet it, then reuse it. A deck that changes between sessions orphans the student's annotations.
+- NEVER paste slide content into chat or into a gate card. Point to the slide instead.
+- NEVER put the full command in plain view on a non-`drill` practice slide. It goes in the last `<details>` rung.
+- NEVER poll the pane or watch which slide is open in companion drive. The student tells you where they are.
+- NEVER drive the browser (clicking, flipping slides) unless the student asks. The deck is theirs to pace.
+- NEVER skip opening the practice pane for a lesson that has steps, and never open one for a concept-only lesson.
 
 ---
 

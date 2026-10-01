@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.21.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.22.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.21.0** (updated 2026-09-30). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.22.0** (updated 2026-10-01). See [Changelog](#changelog) below for what changed.
 
 ## Contents
 
@@ -58,7 +58,7 @@ The skill does **not** install any third-party Python packages at install time. 
 
 ## Workflow phases
 
-The skill is **not** a phased pipeline (no preflight → run → qc chain). It is a flat workflow library of seven sections; the agent reads the relevant section based on the user's prompt. Each section is **opt-in**: trigger on the matching natural-language request and skip the rest.
+The skill is **not** a phased pipeline (no preflight → run → qc chain). It is a flat workflow library of sections; the agent reads the relevant section based on the user's prompt. Each section is **opt-in**: trigger on the matching natural-language request and skip the rest.
 
 | § | Section | When the agent reads it |
 |:--|:--------|:------------------------|
@@ -73,6 +73,7 @@ The skill is **not** a phased pipeline (no preflight → run → qc chain). It i
 | §7 | Quiz / knowledge-check mode (human-driven pane) | "quiz me on chapter 3", "test me on …", mixed MCQ + spot-the-bug + task items |
 | §8 | Multi-agent brainstorming mode (bidirectional) | "brainstorm with another agent", "debate these two designs", "devil's advocate", "get a second opinion with critique", "have the agents argue it out and converge" |
 | §9 | Companion mode (on-call troubleshooter) | "be my companion", "watch my terminal and help when it breaks", "why did that fail?" |
+| §10 | Deck-led course mode (HTML slides + practice pane) | "start the course", "open lesson 2 as slides", "build a slide deck for this lesson" — needs the [html-template-pack](https://github.com/cheahhl814/html-template-pack) skill |
 
 > [!TIP]
 > Every gated decision in §4-§7 surfaces back to the user via `ask_user_question` (Evidence + Recommend + Options) rather than auto-picking. This mirrors how Claude Code and OpenCode surface their permission prompts.
@@ -96,6 +97,8 @@ Trigger phrases (from SKILL.md `triggers:` frontmatter):
 - import a course from PDF / Markdown into a Markdown spine
 - import a course from any text source (YouTube transcript, Notion export, lecture notes)
 - author a new course or extend an existing one in the Markdown spine + JSON quiz schema
+- start / launch a course with an HTML slide deck in the browser + practice pane (§10)
+- build / author an HTML slide deck for a course lesson (§10)
 ```
 
 Two new triggers added in v0.6.0 / v0.8.0 / v0.9.0 / v0.10.0 that did not exist at v0.5.0:
@@ -118,7 +121,9 @@ course-materials/
 └── <lesson-slug>/
     ├── README.md                 # lecture / concepts (~1500 words)
     ├── exercises.md              # typed shell commands the student runs
-    └── quiz-<lesson-id>.json     # matches quiz.schema.v1.json for §7
+    ├── quiz-<lesson-id>.json     # matches quiz.schema.v1.json for §7
+    └── deck.html                 # optional §10 slide deck (html-template-pack slide template;
+                                  #   practice slides carry data-step="<steps.json id>")
 ```
 
 Precedent: published 6-week course on bacterial genome assembly (CC-BY-SA 4.0) authored by 2 Herdr-delegated Pi agents — see `obs-2026-08-18-6-week-bacterial-genome-pipeline-course-built-via-2-herdr-de`. The layout matches `course-materials/<course>/<lesson>/{README,exercises,quiz-<id>.json}` and is a canonical reference for hand-authored courses that import into §6 + §7.
@@ -176,12 +181,14 @@ for qp in sorted(glob.glob('course-materials/**/quiz-*.json', recursive=True)):
 
 ```text
 herdr-lab/
-├── SKILL.md                 # Workflow library: §1-§8 (read sections on demand)
+├── SKILL.md                 # Workflow library: §1-§10 (read sections on demand)
 ├── quiz.schema.v1.json      # JSON Schema 2020-12 for §7 quiz interchange
 ├── README.md                # This file
 ├── docs-corpus/             # Offline snapshots of herdr CLI + 7 coding-agent harnesses
 ├── bin/
 │   ├── quiz-import-pdf.py   # Course importer (4 modes; --llm-stdin fallback)
+│   ├── course-vet.py        # Vet a course before §6/§7/§10 (manifest, lessons, steps, quizzes, decks)
+│   ├── course-deck.py       # §10: wrap a lesson's slide fragment in html-template-pack's slide template
 │   └── herdr-batch.py       # §1.6 batch ledger (new/set/show/todo)
 ├── LICENSE                  # MIT
 └── .gitignore
@@ -214,6 +221,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Source-text sovereignty** — `bin/quiz-import-pdf.py --llm-stdin` accepts text the user pipes in; the script never *fetches* anything. Rights stay with the user.
 
 ## Changelog
+
+### v0.22.0 (2026-10-01)
+
+**New §10 deck-led course mode.** Lesson content moves out of agent chat into an HTML slide deck (`lessons/<slug>/deck.html`, built once from [html-template-pack](https://github.com/cheahhl814/html-template-pack)'s slide template, referenced by a `deck:` frontmatter key). Starting a course opens the deck in the browser (`xdg-open` / `open` / `wslview`, or `python3 -m http.server` for SSH) and a practice pane beside it. The student picks a drive: **companion** (self-paced, agent silent until "check task s2" or "help", which runs the `steps.json` evidence check) or **trainer** (§6 gates with ≤5-line pointer cards like "Slide 5 · task s2", since the deck carries the content). Practice slides are tagged `data-step`, show the goal rather than the command (except under `drill`), and keep the hint ladder in native `<details>` rungs so self-paced students can unfold hints without the agent. Concept-only lessons (no shell) work too: they use the deck plus the §7 quiz, with no pane. New `bin/course-deck.py` wraps a lesson's slide fragment in the template (drops the reference slides, sets the title, namespaces annotation storage, adds the hint style, writes the `deck:` key). `course-vet.py` now checks the deck exists, has no leftover template slides, and that each `data-step` resolves to a step (unslided steps are a warning). It also warns when a practice slide shows no `accept[]` form verbatim, because `accept[]` is exact-match: a student who copies the slide's command must pass "check task". Decks are **lecture decks for students with no prior knowledge**: taught from the full course source rather than the lesson summary, starting with why, defining every term on first use, and following explain → worked example with real output → practice for every command, ending with a recap and common mistakes (~15–25 slides). Piloted on lesson 01 of `missing-semester-2026` (25 slides) and `pixi-fundamentals` (21 slides).
 
 ### v0.21.0 (2026-09-30)
 

@@ -22,6 +22,9 @@ Checks performed:
     position anti-pattern is audited across consecutive optioned items
   * quiz items[].objectives must be a subset of the lesson's declared
     objectives (error on unknown, warning-only on untested)
+  * frontmatter 'deck:' (§10) points at an existing file with no leftover
+    'Template Reference' slides, and every data-step resolves to a
+    steps.json step id (unslided steps are a warning)
 
 Exit 0 = vetted; 1 = errors found; 2 = couldn't start (missing files/deps).
 
@@ -34,7 +37,9 @@ rehearsal stays the agent-driven §6 hidden-tab recipe, not a script runner.
 from __future__ import annotations
 
 import argparse
+from html import unescape
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -222,13 +227,42 @@ def vet_lesson(
             rep.err(f"{where}/steps.json: lesson_id {steps_id!r} != frontmatter id {fm_id!r}")
         vet_steps(steps, lesson_dir, where, rehearse, rep)
     else:
+        steps = None
         rep.warn(f"{where}: no steps.json — §6 step-(b) evidence check stays LLM-judged (allowed, not ideal)")
+
+    # deck.html — the §10 slide deck (html-template-pack slide template)
+    if fm.get("deck"):
+        vet_deck(lesson_dir / str(fm["deck"]), steps, where, rep)
 
     # quizzes
     if fm.get("quiz") and not list(lesson_dir.glob("quiz-*.json")):
         rep.err(f"{where}: frontmatter quiz:{fm['quiz']!r} but no quiz-*.json on disk")
     for qf in sorted(lesson_dir.glob("quiz-*.json")):
         vet_quiz(qf, lesson_dir, fm, passing, shell, rep)
+
+
+def vet_deck(deck: Path, steps: dict | None, where: str, rep: Report) -> None:
+    if not deck.is_file():
+        rep.err(f"{where}: frontmatter deck:{deck.name!r} but the file is missing")
+        return
+    html = deck.read_text(encoding="utf-8")
+    if "Template Reference" in html:
+        rep.err(f"{where}/{deck.name}: html-template-pack 'Template Reference' slides left in — delete them (§10)")
+    step_list = (steps or {}).get("steps", [])
+    step_ids = {s.get("id") for s in step_list}
+    deck_ids = set(re.findall(r'data-step="([^"]+)"', html))
+    # accept[] is exact-match: a student copying the slide's command must pass "check task <id>"
+    for s in step_list:
+        m = re.search(rf'<section[^>]*data-step="{re.escape(str(s.get("id")))}".*?</section>', html, re.S)
+        lines = {ln.strip() for c in re.findall(r"<code>(.*?)</code>", m.group(0) if m else "", re.S)
+                 for ln in unescape(c).splitlines()}
+        if m and not lines & set(s.get("accept", [])):
+            rep.warn(f"{where}/{deck.name}: slide for {s['id']!r} shows no accept[] form verbatim — "
+                     "a student copying it would fail the evidence check")
+    for sid in sorted(deck_ids - step_ids):
+        rep.err(f"{where}/{deck.name}: data-step {sid!r} has no matching steps.json step id")
+    for sid in sorted(step_ids - deck_ids):
+        rep.warn(f"{where}/{deck.name}: steps.json step {sid!r} has no practice slide (data-step)")
 
 
 def vet_steps(steps: dict, lesson_dir: Path, where: str, rehearse: bool, rep: Report) -> None:
