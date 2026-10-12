@@ -1,8 +1,8 @@
 ---
 name: herdr-lab
 description: Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm or debate with other agents (bidirectional multi-agent critique rounds — cross-examine, devil's advocate, second opinion), run sudo or other privileged/secret-entry commands safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial or a quiz / knowledge-check in a side pane, wants a silent companion that troubleshoots their terminal pane only when asked (Warp-style), start a deck-led course (HTML lecture deck via html-template-pack + practice pane; self-paced companion or task-giving trainer) or import a course from PDF/Markdown/any text source into a Markdown spine with optional quiz JSON per lesson. Workflow-only — tool schemas are the source of truth. Complements the official herdr skill.
-version: 0.22.1
-updated: "2026-10-01"
+version: 0.22.2
+updated: "2026-10-12"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -17,7 +17,6 @@ triggers:
   - check another agent's model/quota/usage
   - teach/tutor the user on CLI or bioinformatics commands hands-on in a side pane
   - run a quiz / knowledge-check in a side pane (MCQ, spot-the-bug, task items)
-  - brainstorm / debate / get a second opinion *with critique* together with other agents (bidirectional §8 mode, not a one-shot opinion poll)
   - start / launch a course with an HTML slide deck in the browser + practice pane; self-paced companion or trainer drive (§10)
   - build / author an HTML lecture deck for a course lesson, assuming no prior knowledge (html-template-pack slide template, §10)
   - be my companion / watch my terminal and help when something breaks / look at my pane, why did that fail? (§9)
