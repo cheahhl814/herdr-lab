@@ -1,22 +1,21 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.22.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.24.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
-Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm/debate with other agents (cross-examine a design, devil's advocate, second opinion with critique), run sudo (or another privileged/secret-entry command) safely in a managed pane, check another agent's quota/usage, wants a hands-on CLI/bioinformatics tutorial in a side pane while you watch, runs a quiz / knowledge-check (5-6 items, MCQ + spot-the-bug + task) in a side pane, wants a silent companion that troubleshoots their own terminal pane only when asked (Warp-style), or imports a course from PDF/Markdown/any text source (with LLM-mediated fallback for non-PDF/non-MD). **Workflow-only** — tool schemas (`herdr_layout`, `herdr_pane`, `herdr_agent`) are the source of truth for parameters. Complements the [official herdr skill](https://github.com/herdr).
+Use when the user mentions Herdr, asks to delegate to another agent, run parallel agents, brainstorm/debate with other agents (cross-examine a design, devil's advocate, second opinion with critique), run sudo (or another privileged/secret-entry command) safely in a managed pane, or check another agent's quota/usage. **Workflow-only** — tool schemas (`herdr_layout`, `herdr_pane`, `herdr_agent`) are the source of truth for parameters. Complements the [official herdr skill](https://github.com/herdr).
 
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.22.0** (updated 2026-10-01). See [Changelog](#changelog) below for what changed.
+> Current version: **v0.24.0** (updated 2026-10-14). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. See [Changelog](#changelog).
 
 ## Contents
 
 - [Why this skill exists](#why-this-skill-exists)
 - [Installation](#installation)
 - [Workflow phases](#workflow-phases)
-- [Authoring & importing courses](#authoring--importing-courses)
 - [Repo layout](#repo-layout)
 - [Update check](#update-check)
 - [Hard guarantees](#hard-guarantees)
@@ -25,7 +24,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 
 ## Why this skill exists
 
-The official herdr skill ships `herdr_layout` / `herdr_pane` / `herdr_agent` tools and their parameter schemas. This skill **does not redefine those tools** — it defines the workflow around them: when to split a pane, when to delegate to another agent, how to gate a prompt on completion, how to recover from stalls, and — since v0.6.0 — how to run a tutoring or quiz session in a human-driven pane without flooding the student with LLM tokens.
+The official herdr skill ships `herdr_layout` / `herdr_pane` / `herdr_agent` tools and their parameter schemas. This skill **does not redefine those tools** — it defines the workflow around them: when to split a pane, when to delegate to another agent, how to gate a prompt on completion, how to recover from stalls, and — since v0.15.0 — how to run a bidirectional multi-agent brainstorm (critique rounds, not a one-shot opinion poll).
 
 If you are looking for the tool API, read `docs-corpus/herdr/` (offline captures of the herdr CLI flags and supported agents). If you are looking for *workflow* (the order in which to call those tools, the checkpoints, the failure recoveries), read `SKILL.md`.
 
@@ -39,9 +38,9 @@ This is an **agent skill**, not a user-facing library. There is no `pixi.toml` a
 Install the herdr-lab skill from
 https://github.com/cheahhl814/herdr-lab —
 clone it into your agent's skills directory (the path your agent watches
-for skills). Then read SKILL.md to understand its phases (§1 delegation,
-§4.6 provider preflight, §5 sudo pattern, §6 tutorial mode, §7 quiz mode)
-and the Input/Output contract for each. Confirm when the environment is
+for skills). Then read SKILL.md (the router) and the sub-skill SKILL.md
+you need (delegation/SKILL.md for §1-§5 delegation, brainstorm/SKILL.md
+for bidirectional critique rounds). Confirm when the environment is
 ready.
 ```
 
@@ -52,31 +51,27 @@ git clone https://github.com/cheahhl814/herdr-lab.git
 # Symlink into your agent's skills directory. On Pi:
 mkdir -p ~/.pi/agent/skills
 ln -sf "$(pwd)/herdr-lab" ~/.pi/agent/skills/herdr-lab
+# Each sub-skill also runs standalone (own frontmatter):
+ln -sf "$(pwd)/herdr-lab/delegation" ~/.pi/agent/skills/herdr-lab-delegation
+ln -sf "$(pwd)/herdr-lab/brainstorm" ~/.pi/agent/skills/herdr-lab-brainstorm
 ```
 
-The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/quiz-import-pdf.py`) has optional dependencies — see [Authoring & importing courses](#-authoring--importing-courses).
+The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/herdr-batch.py`, the §1.6 batch ledger) is stdlib-only.
 
 ## Workflow phases
 
-The skill is **not** a phased pipeline (no preflight → run → qc chain). It is a flat workflow library of sections; the agent reads the relevant section based on the user's prompt. Each section is **opt-in**: trigger on the matching natural-language request and skip the rest.
+The skill is a **router master + two sub-skills**. `SKILL.md` routes; the sub-skills do the work. Each sub-skill has its own frontmatter (name, description, version, triggers) and can be symlinked as a standalone skill.
 
-| § | Section | When the agent reads it |
-|:--|:--------|:------------------------|
-| §1 | Delegation sequence (core) | "delegate to claude / codex / opencode / …", "run agents in parallel" |
-| §2 | Verification & completion rules | every agent start / prompt — read once, applies forever |
-| §3 | Interrupt & error recovery | agent stalls, vanishes, false-settles, blocks |
-| §4 | Launch config: model discovery + quota pre-flight | "run agents in parallel" (T2/T3 tasks) |
-| §4.5 | Permission / auto-approval modes at launch | delegation to harnesses that block shell commands by default |
-| §4.6 | Provider preflight & task-tier matching | T2 / hard-cap / ambiguous-tier tasks |
-| §5 | Privileged & secret-entry commands (sudo pattern) | sudo, GPG passphrase, SSH key, 2FA, etc. |
-| §6 | CLI / bioinformatics tutorial mode (human-driven pane) | "tutor me on samtools", "teach me this", "run me through chapter 3" |
-| §7 | Quiz / knowledge-check mode (human-driven pane) | "quiz me on chapter 3", "test me on …", mixed MCQ + spot-the-bug + task items |
-| §8 | Multi-agent brainstorming mode (bidirectional) | "brainstorm with another agent", "debate these two designs", "devil's advocate", "get a second opinion with critique", "have the agents argue it out and converge" |
-| §9 | Companion mode (on-call troubleshooter) | "be my companion", "watch my terminal and help when it breaks", "why did that fail?" |
-| §10 | Deck-led course mode (HTML slides + practice pane) | "start the course", "open lesson 2 as slides", "build a slide deck for this lesson" — needs the [html-template-pack](https://github.com/cheahhl814/html-template-pack) skill |
+| Path | Skill name | When it is read |
+|:-----|:-----------|:----------------|
+| `SKILL.md` | `herdr-lab` | Router: detects intent (delegation vs brainstorming) and routes; fires on bare "use herdr" |
+| `delegation/SKILL.md` | `herdr-lab-delegation` | "delegate to claude / codex / opencode / …", "run agents in parallel" — §1 sequence + worktree merge-back + §1.6 batch ledger, §2 verification, §3 recovery, §4/§4.5/§4.6 launch config + tiers, §5 sudo pattern |
+| `brainstorm/SKILL.md` | `herdr-lab-brainstorm` | "brainstorm with another agent", "debate these two designs", "devil's advocate", "have the agents argue it out and converge" — R0 draft → R1 anonymized cross-critique → R2 decision round → synthesis + Dissent |
+
+`delegation/SKILL.md` and `brainstorm/SKILL.md` are the same §1-§5 / §6 content that previously lived in the single SKILL.md, with brainstorm's §-references rewritten to "delegation §N" so they resolve in the split files.
 
 > [!TIP]
-> Every gated decision in §4-§7 surfaces back to the user via `ask_user_question` (Evidence + Recommend + Options) rather than auto-picking. This mirrors how Claude Code and OpenCode surface their permission prompts.
+> Every gated decision in §4-§6 surfaces back to the user via `ask_user_question` (Evidence + Recommend + Options) rather than auto-picking. This mirrors how Claude Code and OpenCode surface their permission prompts.
 
 ### Natural-language triggers
 
@@ -86,109 +81,31 @@ Trigger phrases (from SKILL.md `triggers:` frontmatter):
 - user mentions Herdr by name
 - delegate a task to another coding agent
 - run agents in parallel / multiple agents at once
-- brainstorm / debate / get a second opinion with critique together with other agents (§8)
-- cross-examine / stress-test / poke holes in my design or plan using another agent (§8)
-- play devil's advocate against my approach (§8)
-- get multiple agents to converge on / vote on a design decision (§8)
+- brainstorm / debate / get a second opinion with critique together with other agents (§6)
+- cross-examine / stress-test / poke holes in my design or plan using another agent (§6)
+- play devil's advocate against my approach (§6)
+- get multiple agents to converge on / vote on a design decision (§6)
 - run sudo or another privileged command safely
 - check another agent's model/quota/usage
-- teach/tutor the user on CLI or bioinformatics commands hands-on in a side pane
-- run a quiz / knowledge-check in a side pane (MCQ, spot-the-bug, task items)
-- import a course from PDF / Markdown into a Markdown spine
-- import a course from any text source (YouTube transcript, Notion export, lecture notes)
-- author a new course or extend an existing one in the Markdown spine + JSON quiz schema
-- start / launch a course with an HTML slide deck in the browser + practice pane (§10)
-- build / author an HTML slide deck for a course lesson (§10)
 ```
 
-Two new triggers added in v0.6.0 / v0.8.0 / v0.9.0 / v0.10.0 that did not exist at v0.5.0:
-
-- "teach/tutor the user on CLI … hands-on in a side pane" (§6)
-- "run a quiz / knowledge-check in a side pane" (§7)
-- "import a course from any text source via --llm-stdin" (importer LLM fallback)
-
-New §8 trigger family added in v0.15.0/v0.15.1: brainstorm, debate, second opinion *with critique*, cross-examine, devil's advocate, "argue it out and converge" — these route to the bidirectional brainstorm mode, NOT a one-shot §1 opinion poll (plain "ask another agent X" without a critique/exchange signal still routes to plain §1 delegation).
-
-## Authoring & importing courses
-
-§6 (tutorial mode) and §7 (quiz mode) consume **Markdown** as the spine. JSON is reserved for the lesson→quiz boundary. The skill ships one CLI to scaffold this layout from arbitrary sources.
-
-### Course layout (produced by the importer, or hand-authored)
-
-```
-course-materials/
-├── README.md                     # top-level course map (mermaid)
-└── <lesson-slug>/
-    ├── README.md                 # lecture / concepts (~1500 words)
-    ├── exercises.md              # typed shell commands the student runs
-    ├── quiz-<lesson-id>.json     # matches quiz.schema.v1.json for §7
-    └── deck.html                 # optional §10 slide deck (html-template-pack slide template;
-                                  #   practice slides carry data-step="<steps.json id>")
-```
-
-Precedent: published 6-week course on bacterial genome assembly (CC-BY-SA 4.0) authored by 2 Herdr-delegated Pi agents — see `obs-2026-08-18-6-week-bacterial-genome-pipeline-course-built-via-2-herdr-de`. The layout matches `course-materials/<course>/<lesson>/{README,exercises,quiz-<id>.json}` and is a canonical reference for hand-authored courses that import into §6 + §7.
-
-### `bin/quiz-import-pdf.py` — course importer
-
-One CLI, four modes:
-
-```bash
-# 1. PDF chapter (pymupdf4llm)
-bin/quiz-import-pdf.py --pdf textbook.pdf --pages 42-60 \
-    --title "SAM flags" --lesson-id ch3-sam-flags \
-    --out-dir course-materials/
-
-# 2. Markdown / plain text on disk
-bin/quiz-import-pdf.py --md chapter.md --title "SAM flags" \
-    --lesson-id ch3-sam-flags --out-dir course-materials/
-
-# 3. LLM-mediated fallback - pipe any text via stdin
-#    (YouTube transcript, Notion export, lecture notes,
-#    anything no deterministic parser handles)
-cat transcript.txt | bin/quiz-import-pdf.py --llm-stdin \
-    --title "SAM flags" --lesson-id ch3-sam-flags \
-    --out-dir course-materials/
-# ...then the agent reads the printed FILL_THIS.md directive on the
-# next turn and fills the skeletons from source.txt.
-
-# 4. Quiz JSON only - against an already-authored lesson
-bin/quiz-import-pdf.py --quiz-from course-materials/<course>/<lesson>/exercises.md \
-    --lesson-id ch3-sam-flags --title "SAM flags"
-```
-
-The importer never auto-generates answer keys — the agent or human fills `q` / `correct` / `answer_key` and validates against `quiz.schema.v1.json` before §7 sees it. This is the authoritative-hallucination rule documented in the script docstring.
-
-### `quiz.schema.v1.json` — JSON Schema for §7
-
-JSON Schema 2020-12. Versions as `herdr-lab/quiz.v1`. Item kinds: `mcq`, `multi`, `preview`, `short`, `task` — one per `ask_user_question` call (never batch).
-
-```bash
-# Validate every quiz-<id>.json in the lesson directory
-uv run --with jsonschema python3 -c "
-import json, jsonschema, glob
-schema = json.load(open('quiz.schema.v1.json'))
-for qp in sorted(glob.glob('course-materials/**/quiz-*.json', recursive=True)):
-    jsonschema.validate(json.load(open(qp)), schema)
-    print(f'OK: {qp}')
-"
-```
-
-### §6 / §7 intake rule
-
-§6 will not start the gate loop until the lesson Markdown is on disk. §7 will not start the per-item loop until `quiz-<id>.json` is on disk and schema-valid. If either is missing on the first turn, the agent's first action is "import first" (clause documented in SKILL.md §6 + §7).
+The §6 brainstorm trigger family (added in v0.15.0/v0.15.1) routes to the bidirectional brainstorm mode, NOT a one-shot §1 opinion poll (plain "ask another agent X" without a critique/exchange signal still routes to plain §1 delegation).
 
 ## Repo layout
 
 ```text
 herdr-lab/
-├── SKILL.md                 # Workflow library: §1-§10 (read sections on demand)
-├── quiz.schema.v1.json      # JSON Schema 2020-12 for §7 quiz interchange
-├── README.md                # This file
-├── docs-corpus/             # Offline snapshots of herdr CLI + 7 coding-agent harnesses
+├── SKILL.md                 # Router master: routes to the two sub-skills below
+├── delegation/
+│   ├── SKILL.md             # herdr-lab-delegation: §1-§5 (independently symlinkable)
+│   ├── docs-corpus -> ../docs-corpus
+│   └── bin -> ../bin
+├── brainstorm/
+│   ├── SKILL.md             # herdr-lab-brainstorm: bidirectional critique rounds (independently symlinkable)
+│   ├── docs-corpus -> ../docs-corpus
+│   └── bin -> ../bin
+├── docs-corpus/             # Shared offline snapshots of herdr CLI + 7 coding-agent harnesses
 ├── bin/
-│   ├── quiz-import-pdf.py   # Course importer (4 modes; --llm-stdin fallback)
-│   ├── course-vet.py        # Vet a course before §6/§7/§10 (manifest, lessons, steps, quizzes, decks)
-│   ├── course-deck.py       # §10: wrap a lesson's slide fragment in html-template-pack's slide template
 │   └── herdr-batch.py       # §1.6 batch ledger (new/set/show/todo)
 ├── LICENSE                  # MIT
 └── .gitignore
@@ -216,11 +133,18 @@ git rev-parse --verify origin/main             # upstream HEAD
 
 - **Workflow-only, no tool redefinition** — `SKILL.md` never restates `herdr_layout` / `herdr_pane` / `herdr_agent` parameters; it only orders calls and lists recovery paths. Drift rule at the bottom of SKILL.md enforces this.
 - **Schema-grounded tool usage** — when the skill recommends a herdr CLI flag, the recommendation is grounded in `docs-corpus/herdr/` captures, not the agent's memory.
-- **Push-UIs over poll loops** — every checkpoint that would otherwise need polling (tutorial-mode lesson gate, quiz-mode per-item grading) uses `ask_user_question` as a blocking gate (one tool call, zero LLM tokens while waiting). Polling loops with `bash sleep` + `herdr_pane read` are explicitly forbidden.
-- **Markdown-first interchange** for human-authored course content; JSON is reserved for machine-graded quiz items at the lesson → quiz boundary.
-- **Source-text sovereignty** — `bin/quiz-import-pdf.py --llm-stdin` accepts text the user pipes in; the script never *fetches* anything. Rights stay with the user.
+- **Push-UIs over poll loops** — every checkpoint that would otherwise need polling uses `ask_user_question` as a blocking gate (one tool call, zero LLM tokens while waiting). Polling loops with `bash sleep` + `herdr_pane read` are explicitly forbidden.
+- **Shared assets via symlinks** — `docs-corpus/` and `bin/` live once at the root; per-sub-skill relative symlinks keep every path inside the sub-skill SKILL.mds resolving, whether loaded via the router or as a symlinked standalone skill.
 
 ## Changelog
+
+### v0.24.0 (2026-10-14)
+
+**Split the two modes into independently symlinkable sub-skills (router + sub-skill layout).** `SKILL.md` became a router; `delegation/SKILL.md` (`herdr-lab-delegation`, §1-§5 delegation core) and `brainstorm/SKILL.md` (`herdr-lab-brainstorm`, bidirectional critique rounds) each carry their own frontmatter, trigger set, and version (0.24.0, matching across master + sub-skills). Brainstorm's §1-§5 references were rewritten as "delegation §N" to resolve across the file split; its section header lost the redundant §6. `docs-corpus/` and `bin/` are shared once at the root and reached via relative symlinks inside each sub-skill directory, so paths resolve identically whether a sub-skill is loaded via the router or symlinked standalone (`ln -sf .../herdr-lab/delegation ~/.pi/agent/skills/herdr-lab-delegation`). No workflow text was changed — pure restructure.
+
+### v0.23.0 (2026-10-14)
+
+**Stripped tutorial (§6 old), quiz (§7), companion (§9), and deck-led course (§10) modes; brainstorming renumbered §8 → §6.** Usage showed delegation (§1–§5) and multi-agent brainstorming as the only heavily used modes; the four teaching/companion modes were removed and brainstorming is now §6. Frontmatter description and triggers trimmed to delegation + brainstorming + sudo + quota; the `html-template-pack` optional dependency is gone; the course/quiz machinery (`course.schema.v1.json`, `quiz.schema.v1.json`, `steps.schema.v1.json`, `bin/quiz-import-pdf.py`, `bin/course-vet.py`, `bin/course-deck.py`) was deleted. §1–§5 delegation/core workflow and the batch ledger are unchanged. Historical changelog entries below describe the removed modes as they shipped at the time.
 
 ### v0.22.0 (2026-10-01)
 

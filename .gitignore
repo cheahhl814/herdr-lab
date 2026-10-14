@@ -8,6 +8,10 @@ BRIEF.md
 # bioinfo-skill-creator run artifact (stale generated metadata, not consumed by the skill)
 params.json
 
+# Handoff session artifacts (regenerable audit trail, never published)
+handoff.md
+handoff-archive.md
+
 # OS / editor artifacts
 .DS_Store
 Thumbs.db
