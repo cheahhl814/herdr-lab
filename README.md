@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.24.1-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.25.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,13 +9,14 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.24.1** (updated 2026-10-28). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. See [Changelog](#changelog).
+> Current version: **v0.25.0** (updated 2026-10-28). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. v0.25.0 adds **fleet composition** (§4.7): how many harnesses to involve, which harness per seat, and which model per seat. See [Changelog](#changelog).
 
 ## Contents
 
 - [Why this skill exists](#why-this-skill-exists)
 - [Installation](#installation)
 - [Workflow phases](#workflow-phases)
+- [Fleet composition (§4.7)](#fleet-composition-47)
 - [Repo layout](#repo-layout)
 - [Update check](#update-check)
 - [Hard guarantees](#hard-guarantees)
@@ -70,13 +71,27 @@ The skill is a **router master + two sub-skills**. `SKILL.md` routes; the sub-sk
 | Path | Skill name | When it is read |
 |:-----|:-----------|:----------------|
 | `SKILL.md` | `herdr-lab` | Router: detects intent (delegation vs brainstorming) and routes; fires on bare "use herdr" |
-| `delegation/SKILL.md` | `herdr-lab-delegation` | "delegate to claude / codex / opencode / …", "run agents in parallel" — §1 sequence + worktree merge-back + §1.6 batch ledger, §2 verification, §3 recovery, §4/§4.5/§4.6 launch config + tiers, §5 sudo pattern |
+| `delegation/SKILL.md` | `herdr-lab-delegation` | "delegate to claude / codex / opencode / …", "run agents in parallel" — §1 sequence + worktree merge-back + §1.6 batch ledger, §2 verification, §3 recovery, §4/§4.5/§4.6 launch config + tiers, §4.7 fleet composition, §5 sudo pattern |
 | `brainstorm/SKILL.md` | `herdr-lab-brainstorm` | "brainstorm with another agent", "debate these two designs", "devil's advocate", "have the agents argue it out and converge" — R0 draft → R1 anonymized cross-critique → R2 decision round → synthesis + Dissent |
 
 `delegation/SKILL.md` and `brainstorm/SKILL.md` are the same §1-§5 / §6 content that previously lived in the single SKILL.md, with brainstorm's §-references rewritten to "delegation §N" so they resolve in the split files.
 
 > [!TIP]
-> Every gated decision in §4-§6 surfaces back to the user via `ask_user_question` (Evidence + Recommend + Options) rather than auto-picking. This mirrors how Claude Code and OpenCode surface their permission prompts.
+> Every gated decision in §4-§4.7 surfaces back to the user via `ask_user_question` (Evidence + Recommend + Options) rather than auto-picking. This mirrors how Claude Code and OpenCode surface their permission prompts.
+
+## Fleet composition (§4.7)
+
+Before any layout call, the skill decides **how many harnesses** to involve, **which harness per seat**, and **which model per seat** — in that order. §4.6 picks a model for one task on one seat; §4.7 covers the fleet.
+
+| Decision | Rule |
+|:---------|:-----|
+| **Fleet size** | Prescriptive table by intent — delegation 1 seat (N for N sub-tasks, 2 max for a cross-check); brainstorm 4–6 divergent, 3–5 convergent, 2–3 factual, 2–4 synthesis. **Hard cap 5** unless the user asks. |
+| **Harness spread** | Implementation batches: same harness/family across seats (consistency, one quota plan). Brainstorm: **distinct harnesses AND distinct model families** — and the **orchestrator's own model family counts as a seat's**, since it writes the R0 draft. |
+| **Model per seat** | Each seat gets its own tier and tier-matched model (§4.6). Implementation: one family across seats. Brainstorm: deliberately different families, at least one on another provider when available. |
+| **Budget** | N concurrent seats on one provider account burn that window N times over. Probes are harness-local; shrink the fleet, spread accounts, or ask — never launch N seats into a wall of 429s. |
+| **Record** | A fleet-plan line before the first layout call; the §1.6 ledger row carries `tier`, `harness` and `model` (`bin/herdr-batch.py` gained a `model` field in v0.25.0). |
+
+Grounded in `docs-corpus/herdr/supported-agents.md` (21 kinds, lifecycle-vs-screen-manifest authority, detection limits) and `docs-corpus/providers/providers-matrix.md` (harness × provider, tier → required properties). Model *names* are never hardcoded — §4.6 re-discovers them at call time.
 
 ### Natural-language triggers
 
@@ -86,15 +101,15 @@ Trigger phrases (from SKILL.md `triggers:` frontmatter):
 - user mentions Herdr by name
 - delegate a task to another coding agent
 - run agents in parallel / multiple agents at once
-- brainstorm / debate / get a second opinion with critique together with other agents (§6)
-- cross-examine / stress-test / poke holes in my design or plan using another agent (§6)
-- play devil's advocate against my approach (§6)
-- get multiple agents to converge on / vote on a design decision (§6)
+- brainstorm / debate / get a second opinion with critique together with other agents (brainstorm sub-skill)
+- cross-examine / stress-test / poke holes in my design or plan using another agent (brainstorm sub-skill)
+- play devil's advocate against my approach (brainstorm sub-skill)
+- get multiple agents to converge on / vote on a design decision (brainstorm sub-skill)
 - run sudo or another privileged command safely
 - check another agent's model/quota/usage
 ```
 
-The §6 brainstorm trigger family (added in v0.15.0/v0.15.1) routes to the bidirectional brainstorm mode, NOT a one-shot §1 opinion poll (plain "ask another agent X" without a critique/exchange signal still routes to plain §1 delegation).
+The brainstorm trigger family (added in v0.15.0/v0.15.1) routes to the bidirectional brainstorm mode, NOT a one-shot §1 opinion poll (plain "ask another agent X" without a critique/exchange signal still routes to plain §1 delegation).
 
 ## Repo layout
 
@@ -102,7 +117,7 @@ The §6 brainstorm trigger family (added in v0.15.0/v0.15.1) routes to the bidir
 herdr-lab/
 ├── SKILL.md                 # Router master: routes to the two sub-skills below
 ├── delegation/
-│   ├── SKILL.md             # herdr-lab-delegation: §1-§5 (independently symlinkable)
+│   ├── SKILL.md             # herdr-lab-delegation: §1-§5 + §4.7 fleet composition (independently symlinkable)
 │   ├── docs-corpus -> ../docs-corpus
 │   └── bin -> ../bin
 ├── brainstorm/
@@ -142,6 +157,24 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Shared assets via symlinks** — `docs-corpus/` and `bin/` live once at the root; per-sub-skill relative symlinks keep every path inside the sub-skill SKILL.mds resolving, whether loaded via the router or as a symlinked standalone skill.
 
 ## Changelog
+
+### v0.25.0 (2026-10-28)
+
+**Added fleet composition — the missing "how many harnesses, which models" decision.** Before v0.25.0 the skill decided a model for *one* task on *one* seat (§4.6) and then consumed a seat count it never derived (§1 step 1 opened with "Count how many secondary agents the task will run concurrently"). Nothing in the skill answered *how many* harnesses to involve, *which* harness per seat, or *which* model per seat, and the per-seat model was not even recorded — `bin/herdr-batch.py` had no `model` field.
+
+- **`delegation/SKILL.md` §4.7 Fleet composition** (new): decision order fleet size → harness spread → model per seat → budget → ask-user gate → fleet plan.
+  - **§4.7.2 fleet size** — prescriptive intent→seats table (delegation 1 / N-per-sub-task / 2 max for a cross-check; brainstorm 4–6 divergent, 3–5 convergent, 2–3 factual, 2–4 synthesis) with a **hard cap of 5 seats** and anti-padding rules.
+  - **§4.7.3 harness spread** — implementation batches keep one harness/family (consistency, one quota plan); brainstorm seats require **distinct harnesses and distinct model families**, and the **orchestrator's own model family counts as a seat's** (it writes the R0 draft, so three seats matching you are one prior sampled three times). Prefers lifecycle-authority harnesses for long/unattended batches; avoids `gemini`/`cline` (detection warnings) and the no-integration kinds.
+  - **§4.7.4 model per seat** — per-seat tier and tier-matched model; brainstorm deliberately mixes families and puts a seat on another provider when one is available; same family ≠ diversity.
+  - **§4.7.5 budget** — N concurrent seats on one account burn that window N times over; probes stay harness-local; shrink the fleet, spread accounts, or ask before launching into a 429 wall; Ollama local seats are VRAM-bound.
+  - **§4.7.6 ask-user gate** — extended with fleet conditions (size > 3 brainstorm / > 2 delegation batch, single usable harness, single-account T2/unattended, ties, over the cap).
+  - **§4.7.7 fleet plan** — a one-line plan (seats | harness/model per seat | spread | budget | reason) written before the first layout call.
+- **§1 step 1 reordered** — "decide the topology" became "decide the fleet, then the topology": the seat count now comes from §4.7 instead of being assumed.
+- **§4.6 ask-user gate** — stale "a §6 brainstorm" cross-reference fixed (the brainstorm is a separate sub-skill since v0.24.0).
+- **§1.6 ledger** — the row schema now carries `model` alongside `tier` and `harness`.
+- **`bin/herdr-batch.py`** — new `model` field (settable + shown); stale "§8 brainstorming" docstring reference fixed.
+- **`brainstorm/SKILL.md`** — setup now routes through delegation §4.7; the sub-mode table gained a **Seats** column (4–6 / 3–5 / 2–3 / 2–4); a lost seat must be re-planned rather than silently replaced; new anti-pattern ("never run every seat on the orchestrator's own model family").
+- Master + both sub-skills bumped to **0.25.0** (updated 2026-10-28).
 
 ### v0.24.1 (2026-10-28)
 

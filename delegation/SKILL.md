@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.24.1
+version: 0.25.0
 updated: "2026-10-28"
 triggers:
   - user mentions Herdr by name
@@ -23,7 +23,7 @@ Herdr tools are opt-in: only use them when the user explicitly invokes this work
 
 ## §1 Delegation sequence (core)
 
-1. **Decide the topology BEFORE creating layout.** Count how many secondary agents the task will run concurrently.
+1. **Decide the fleet, then the topology, BEFORE creating layout.** The seat count is not given to you — derive it: **fleet size → harness spread → model per seat → budget check → fleet plan** (§4.7, ending with the plan line in §4.7.7). Only then pick the topology from that count.
    - **1 secondary agent** → `herdr_layout pane_split` — get a pane ID. Default topology: sibling pane, caller's tab + cwd. Use another tab/workspace/cwd only if the user asked for it. For background work the user should not be pulled into, pass `focus: false` on the `herdr_layout` call (the standalone `herdr` CLI's equivalent, if invoked directly rather than through the tool, is `--no-focus`).
    - **2+ secondary agents** → do NOT split a second pane. Every split beyond the first shrinks each pane's share of the screen; at 2+ splits a pane drops to roughly 1/4 width, where agent output is effectively unreadable — both for you when verifying via `herdr_agent read`/`herdr-convo` and for the user watching the TUI. Instead, create **one new tab per agent** (`herdr_layout tab_create`; each new tab comes with its own root pane — no extra split needed) and run steps 2–5 below against each tab's root pane. Tabs keep every agent full-width; the user switches tabs instead of squinting at quarter-panes. Set each tab's `cwd` the same way you would have set the pane's (worktree/scratch dirs per the concurrent-write isolation rule below); pass `focus: false` for background batches the user shouldn't be pulled into.
    
@@ -60,7 +60,7 @@ Applies whenever §1's isolation rule produced 2+ worktrees. Never leave this to
 
 ## §1.6 Batch ledger (interruption-survivable state)
 
-For any batch of 2+ agents — and any single long-running delegation you might need to resume after context loss — keep a JSON ledger via `bin/herdr-batch.py` (reached through the `bin/` symlink sibling of this file; stdlib-only, see its `--help`). One row per agent: `{agent_name, task, tier, harness, tab_id, pane_id, worktree, session_id, convo_cursor, state, verified}`. `session_id` comes from `herdr-convo locate <pane>` (claude/codex/opencode/pi); `convo_cursor` from the last `herdr-convo read`.
+For any batch of 2+ agents — and any single long-running delegation you might need to resume after context loss — keep a JSON ledger via `bin/herdr-batch.py` (reached through the `bin/` symlink sibling of this file; stdlib-only, see its `--help`). One row per agent: `{agent_name, task, tier, harness, model, tab_id, pane_id, worktree, session_id, convo_cursor, state, verified}` — `tier`, `harness` and `model` carry the fleet plan (§4.7.7), so the fleet survives context loss. `session_id` comes from `herdr-convo locate <pane>` (claude/codex/opencode/pi); `convo_cursor` from the last `herdr-convo read`.
 
 - **Update the row at every state transition** (start, each §3 recovery, verification, merge-back) — once a batch outgrows a single turn, the ledger, not your context, is the source of truth.
 - **Resume after a herdr restart or context compaction**: `herdr_agent list`, match rows by agent name (that is why §1 step 3's `<task-slug>-<harness>` naming matters — it is the join key); herdr auto-resumes supported harnesses after a restart, and `herdr-convo read --cursor` picks up each transcript where it left off.
@@ -157,7 +157,7 @@ Decision procedure — cache discovery in-session per harness/provider after fir
 1. Classify the task into a tier (table below).
 2. Discover lazily (first use per session, then reuse): harnesses via `herdr agent start --help` + `docs-corpus/herdr/supported-agents.md`; providers per harness (pi `--provider`/`--list-models`; opencode `opencode models`; copilot provider env vars; codex `model_providers` in config.toml; claude/gemini/agy locked — see `docs-corpus/providers/providers-matrix.md`); models per provider (§4 list commands + `ollama list`, note `:cloud` vs local); Ollama pre-flight (daemon via `ollama ps`, model present via `ollama list` — `ollama pull` is a prerequisite, never implicit).
 3. Match discovered options against the tier's required properties, never by remembered model name.
-4. **Ask-user gate** — fire ONLY when no profile match AND (T2 task, OR a hard-cap harness is near its probed limit, OR ≥2 candidates tie on all required properties, OR a §6 brainstorm with ≥3 seats, any T2 seat, or a round beyond R2). Use the house Evidence + Recommend + Options convention. Never fire for an unambiguous T0/T1 match or a profile hit — auto-pick.
+4. **Ask-user gate** — fire ONLY when no profile match AND (T2 task, OR a hard-cap harness is near its probed limit, OR ≥2 candidates tie on all required properties, OR a brainstorm sub-skill run with ≥3 seats, any T2 seat, or a round beyond R2). Use the house Evidence + Recommend + Options convention. Never fire for an unambiguous T0/T1 match or a profile hit — auto-pick. The fleet-level conditions (seat count, harness spread, single-account fleets) are in §4.7.6 and fire on top of these.
 5. State tier + chosen option + one-line reason (profile match / cheapest / fastest / quota constraint) before launching.
 
 Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recommendation in pane output and waits; the calling agent reads it and asks the user on its behalf.
@@ -172,6 +172,87 @@ Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recomme
 **T3 note**: for short read-only reviews, prefer a one-shot (`claude -p --permission-mode plan` with file redirect) over an interactive plan-mode session — TUI redraw/truncation makes short answers hard to retrieve via `herdr_agent read`, and settling `idle` while the TUI still shows "Generating…" is a known false-settlement flavor.
 **Ollama note**: `:cloud` models proxy to Ollama's hosted service (account + egress required); local models run on-box, offline/private, need VRAM headroom, weaker at T2 work.
 **Refusals**: never sum/infer shared quota across harnesses proxying the same provider account — probes are harness-local only. Verify the active provider before trusting a probe/cost estimate. Custom-provider API keys/base-URLs follow §5. Never change a harness's provider config without asking first.
+
+## §4.7 Fleet composition: seat count, harness spread, model assignment
+
+§4.6 picks a model for **one** task on **one** seat. A fleet needs three more decisions, in this order — **fleet size → harness spread → model per seat** — and they come *before* topology (§1 step 1 consumes the seat count) and *before* any layout call.
+
+### 4.7.1 Order of decisions
+
+0. **Tier per seat** (§4.6 step 1) — a fleet may be heterogeneous (a T0 bulk seat plus a T2 seat in the same batch).
+1. **Fleet size** — how many harnesses (4.7.2).
+2. **Harness spread** — which harness for which seat (4.7.3).
+3. **Model per seat** — tier-matched, and spread per intent (4.7.4).
+4. **Budget check** — quota/concurrency across the fleet (4.7.5).
+5. **Ask-user gate** — the extended conditions in 4.7.6.
+6. **Write the fleet plan**, then create layout (§1 step 1). A seat that exists in a plan but not in the ledger is a seat nobody tracks.
+
+### 4.7.2 Fleet size (how many harnesses)
+
+| Intent | Seats | Rule |
+| ------ | ----- | ---- |
+| Delegation — one task, T0/T1 | 1 | A second seat on the same task is ceremony unless the user asked for a cross-check. |
+| Delegation — N independent sub-tasks | N (one per sub-task) | Split by *work*, never by redundancy. Two seats on the same sub-task duplicate cost, not insight. |
+| Delegation — same task, independent check wanted | 2 (max) | Only when the user asked for a second opinion / cross-check, or the task is T2 and high-stakes. |
+| Delegation — batch with dependent steps | 1 per independent step | Serialize dependent steps; concurrent writers need worktree isolation (§1), not extra seats. |
+| Brainstorm — divergent ideation | 4–6 | Breadth: distinct seats = distinct ideas. Cost grows linearly, coordination does not improve. |
+| Brainstorm — convergent design choice | 3–5 | 3+ is required for a plurality vote; 2 seats stop after R1 (brainstorm §3). |
+| Brainstorm — convergent factual check | 2–3 | Evidence-checked, no counting — more seats do not add evidence. |
+| Brainstorm — synthesis / draft | 2–4 | Each seat contributes a section; past 4 the merge cost exceeds the gain. |
+
+**Hard cap: 5 seats.** Beyond that, the user must ask. Every extra seat costs a quota window, a tab, a ledger row, and a round-barrier participant, and it dilutes the relay rather than sharpening it.
+
+**Anti-patterns**: padding the fleet to look thorough; running 2 seats when the user asked for one opinion (that is the one-shot of §1, not a fleet); treating a brainstorm's "≥3 seats" voting rule as a target to overshoot.
+
+### 4.7.3 Harness spread (which harness per seat)
+
+- **Implementation batches**: consistency wins — the same harness (and family) across seats. Shared conventions, comparable output, one quota plan, cheaper.
+- **Brainstorm / critique seats**: spread across **distinct harnesses AND distinct model families**. Same-model seats share blind spots; three seats on one model are three samples of one prior, not three opinions. Target: `min(seats, usable harnesses)` distinct harnesses, and never two seats on the same model family while a distinct family is available.
+- **The orchestrator counts as a seat.** You (the orchestrator) write your own R0 draft, so your model family is part of the fleet's prior. A 3-seat brainstorm where you are also Claude is one prior sampled three times. Include your own family in the diversity count — if every seat matches you, spread the seats or tell the user the brainstorm has a single prior.
+- **Availability is not guaranteed**: harness kind enum from `herdr agent start --help` + `docs-corpus/herdr/supported-agents.md`; then confirm the harness is actually installed and authenticated on this machine. If only one harness is usable, say so plainly and offer to shrink the fleet — a 3-seat single-model brainstorm is a weak brainstorm — rather than silently padding.
+- **Prefer lifecycle-authority harnesses** (state + session authority: pi, omp, opencode, kimi, kilo, mastracode) for long or unattended batches. Screen-manifest harnesses can settle `idle` while actually waiting for input (`docs-corpus/herdr/supported-agents.md`); a fleet of flaky seats produces flaky rounds.
+- **Avoid for unattended seats**: `gemini` / `cline` ("detected but less thoroughly tested" → expect misclassification) and the no-integration kinds `amp` / `kiro` / `maki` (detection only, no session identity).
+- One harness per seat: do not run two agents of the same kind in one pane, and never drive the same harness from two seats expecting independent state.
+
+### 4.7.4 Model assignment per seat
+
+- Each seat gets its own tier and its own tier-matched model (§4.6 steps 2–3) — re-discover per seat, never by remembered name, and never hardcode a model name (§4.6 refusals).
+- **Implementation batch**: one model family across seats, unless a specific seat needs a property another lacks (e.g. a T2 seat needing large context).
+- **Brainstorm**: deliberately **different families per seat**; do not run the whole fleet on the strongest model (cost, and you lose the disagreement signal). Mix strong and cheap across seats, and put at least one seat on a *different provider* when one is available — one provider's training and policy shapes every seat on it.
+- **Local models are legitimate seats** (cheap, private, independent) but weaker at T2: use a local seat for T0/T1 or as the diversity seat, not as the decisive seat. Check `ollama ps` / `ollama list` first (§4.6 Ollama note).
+- **Same family, different model is not diversity** — two seats on the same family share the same blind spots; count *families*, not model strings.
+
+### 4.7.5 Budget and quota across the fleet
+
+- **N concurrent seats on one provider account burn that account's window N times over.** This is concurrency on the *same* account, not cross-harness inference: the §4.6 refusal is about *trusting another harness's probe*; here the burn is knowable because the account is shared.
+- Probes are harness-local. Never claim remaining headroom from a different harness's probe — and never sum a probe across harnesses.
+- If the probed headroom is thinner than the fleet for a hard-cap harness (`copilot`, `agy`): shrink the fleet, spread the seats onto another account/provider, or ask the user. Do not launch N seats into a wall and discover it as five simultaneous 429s.
+- Ollama local seats are VRAM-bound: N seats on one local model may serialize or OOM — treat local seats as serial unless the box has the headroom.
+- Costs: a T2 fleet is cost-insensitive by tier, but a *brainstorm* fleet spends the same budget while producing only a decision — keep brainstorm seats at T1/T3 unless the question is genuinely T2.
+
+### 4.7.6 Ask-user gate (extended)
+
+Fire the §4.6 step-4 gate (house Evidence + Recommend + Options) when **any** of these holds, on top of the §4.6 conditions:
+
+- fleet size > 3 in a brainstorm, or > 2 in a delegation batch;
+- only one harness is usable but the plan needs distinct seats;
+- every seat lands on one provider account and the task is T2 or unattended;
+- two candidates tie for a seat's model, or a seat's tier is genuinely ambiguous;
+- the fleet would exceed the hard cap of 5.
+
+Never fire for an unambiguous single-seat T0/T1 pick, or when `~/.config/herdr/routing.json` resolves the tier.
+
+### 4.7.7 Fleet plan artifact
+
+Write one line per seat plus a header **before** the first layout call, and keep the ledger in step with it (the ledger row carries `tier`, `harness`, and — since v0.25.0 — `model`):
+
+```text
+fleet: 3 seats | seat1 t0 bulk → pi / ollama:qwen3-coder:30b | seat2 t2 refactor → claude / opus | seat3 t1 review → codex / gpt-5
+spread: 3 harnesses, 3 model families, 1 local seat | budget: claude acct 1×, codex acct 1×, pi local
+reason: 2 independent sub-tasks + 1 cross-check; all seats distinct families
+```
+
+If the plan changes mid-flight, update the ledger — the ledger, not the context, is the source of truth (§1.6). A seat that was never planned is a seat you cannot verify; a planned seat that never started is a ledger row to mark `lost` (§3), not a silent omission.
 
 ## §5 Privileged & secret-entry commands (sudo pattern)
 

@@ -12,6 +12,9 @@ Row fields:
   task          one-line task description
   tier          §4.6 task tier: T0 | T1 | T2 | T3
   harness       agent kind (claude, codex, opencode, pi, ...)
+  model         the model actually selected for this seat (§4.7 per-seat
+                assignment) — provider-qualified when it matters
+                (e.g. "claude:opus", "ollama:qwen3-coder:30b")
   tab_id        herdr tab hosting the agent's root pane
   pane_id       herdr pane the agent runs in
   worktree      worktree path/workspace if §1 isolation applied one
@@ -19,7 +22,7 @@ Row fields:
   convo_cursor  last-seen herdr-convo read cursor
   state         pending | working | blocked | done | idle | lost | merged
   verified      §2 output check passed (bool)
-  round         §8 brainstorming: last completed round (r0/r1/r2/synthesis)
+  round         brainstorming sub-skill: last completed round (r0/r1/r2/synthesis)
 
 Subcommands:
   new   [--dir DIR]           create a ledger, print its path
@@ -51,6 +54,7 @@ FIELDS = (
     "task",
     "tier",
     "harness",
+    "model",
     "tab_id",
     "pane_id",
     "worktree",
@@ -123,8 +127,8 @@ def cmd_set(args) -> None:
 def cmd_show(args) -> None:
     data = _load(pathlib.Path(args.file).expanduser())
     rows = sorted(data["rows"].values(), key=lambda r: r["agent_name"])
-    cols = ["agent_name", "harness", "tier", "round", "state", "verified", "pane_id",
-            "tab_id", "worktree", "convo_cursor", "task"]
+    cols = ["agent_name", "harness", "model", "tier", "round", "state", "verified",
+            "pane_id", "tab_id", "worktree", "convo_cursor", "task"]
     if args.md:
         print("| " + " | ".join(cols) + " |")
         print("|" + "|".join([" --- "] * len(cols)) + "|")
