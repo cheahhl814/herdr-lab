@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.25.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.26.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.25.0** (updated 2026-10-28). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. v0.25.0 adds **fleet composition** (§4.7): how many harnesses to involve, which harness per seat, and which model per seat. See [Changelog](#changelog).
+> Current version: **v0.26.0** (updated 2026-10-28). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill. See [Changelog](#changelog).
 
 ## Contents
 
@@ -93,6 +93,25 @@ Before any layout call, the skill decides **how many harnesses** to involve, **w
 
 Grounded in `docs-corpus/herdr/supported-agents.md` (21 kinds, lifecycle-vs-screen-manifest authority, detection limits) and `docs-corpus/providers/providers-matrix.md` (harness × provider, tier → required properties). Model *names* are never hardcoded — §4.6 re-discovers them at call time.
 
+### Knowing what this machine actually has
+
+The corpus says what a harness **supports**; it is a snapshot of the CLIs on the capture host, not an inventory of the machine you are running on. Availability is answered by a local probe, `bin/herdr-capabilities.py` (§4.6 step 2):
+
+```bash
+python3 bin/herdr-capabilities.py              # fleet table
+python3 bin/herdr-capabilities.py --json       # machine-readable
+python3 bin/herdr-capabilities.py --no-models  # fast pass, no model listing
+```
+
+| Signal | Source | What it tells you |
+|:-------|:-------|:-----------------|
+| Startable kinds | `herdr agent start --help` | The **live** `--kind` enum — never hardcoded (0.8.0 = 21 kinds, 0.9.0 = 23). |
+| Installed | `command -v <executable>` | Which harnesses are actually on PATH here. |
+| Integration state | `herdr integration status` | `current (vN)` = lifecycle authority (state + session); `outdated` = stale; `not installed` = screen-manifest detection only, i.e. the flake risk. Also prints the per-agent hook path, which doubles as an install/auth marker. |
+| Models | `pi --list-models`, `opencode models`, `ollama list` | What each installed harness can run. Harnesses with no CLI list (claude/codex/copilot/agy/gemini) pick the model in-TUI (`/model`) and report quota in-TUI (`/usage`, `/status`). |
+
+Run it once per session and reuse the result; re-run it if a seat fails to start. A missing binary is a fact to report, not a gap to work around silently.
+
 ### Natural-language triggers
 
 Trigger phrases (from SKILL.md `triggers:` frontmatter):
@@ -118,15 +137,18 @@ herdr-lab/
 ├── SKILL.md                 # Router master: routes to the two sub-skills below
 ├── delegation/
 │   ├── SKILL.md             # herdr-lab-delegation: §1-§5 + §4.7 fleet composition (independently symlinkable)
+│   ├── README.md            # sub-skill README (public face)
 │   ├── docs-corpus -> ../docs-corpus
 │   └── bin -> ../bin
 ├── brainstorm/
 │   ├── SKILL.md             # herdr-lab-brainstorm: bidirectional critique rounds (independently symlinkable)
+│   ├── README.md            # sub-skill README (public face)
 │   ├── docs-corpus -> ../docs-corpus
 │   └── bin -> ../bin
 ├── docs-corpus/             # Shared offline snapshots of herdr CLI + 7 coding-agent harnesses
 ├── bin/
-│   └── herdr-batch.py       # §1.6 batch ledger (new/set/show/todo)
+│   ├── herdr-batch.py       # §1.6 batch ledger (new/set/show/todo)
+│   └── herdr-capabilities.py # §4.6 local fleet probe (kinds / installed / integration / models)
 ├── LICENSE                  # MIT
 └── .gitignore
 ```
@@ -157,6 +179,21 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Shared assets via symlinks** — `docs-corpus/` and `bin/` live once at the root; per-sub-skill relative symlinks keep every path inside the sub-skill SKILL.mds resolving, whether loaded via the router or as a symlinked standalone skill.
 
 ## Changelog
+
+### v0.26.0 (2026-10-28)
+
+**Added a local fleet probe, because "which harnesses and models are available?" is a question about the machine, not about the docs.** The corpus said what a harness *supports*; §4.6 step 2 pointed at `herdr agent start --help` (the kind enum) and a corpus kind table (a snapshot of another machine's herdr) — neither of which says what the box you are running on actually has installed, authenticated, and model-equipped. A seat chosen from that list is a seat that may not exist.
+
+- **`bin/herdr-capabilities.py` (new, stdlib-only)** — probes the local machine in four signals: the **live** `--kind` enum (`herdr agent start --help`), what is on PATH (`command -v`), per-agent **integration state** (`herdr integration status` → `current (vN)` = lifecycle authority, `outdated`, `not installed` = screen-manifest only), and **models per installed harness** (`pi --list-models`, `opencode models`, `ollama list`; harnesses with no CLI list report their in-TUI probe). `--json` for machine use, `--no-models` for a fast pass. Prints no secrets — only executable paths, hook paths, and model names.
+- **§4.6 step 2 rewritten** — the discovery procedure is now an explicit a–f ladder (live enum → installed → integration reliability → models → one probe → per-machine honesty), with the rule stated outright: a skill file, a corpus capture, or a prior session's model list is *documentation of a different machine*, never availability here. The corpus is demoted to flag syntax, not inventory.
+- **§4.7.3** — availability now cites the probe instead of the corpus kind table.
+- **§4.7.7** — the fleet plan's harness/model names must come from the probe.
+- **§4** — new note: "The corpus describes other machines" (snapshot for flag syntax, not an inventory).
+- **Router** — new dispatch rule 9: availability is machine-local and only a probe knows it.
+- **`brainstorm/SKILL.md`** — the setup paragraph now requires the probe and states that a lineup built from a remembered list is a lineup of unavailable seats.
+- **Corpus refreshed for a real drift** — the kind enum was re-captured from a **0.9.0** binary (0.8.0 = 21 kinds → **0.9.0 = 23**): `qwen` is now a real `--kind` (it was docs-only in 0.8.0) and `muse` is new and undocumented. `docs-corpus/herdr/help-agent-start.md` and `docs-corpus/harnesses/herdr-supported-kinds.txt` were regenerated; `docs-corpus/herdr/supported-agents.md` gained a re-verification note and rows 22–23.
+- **Sub-skill READMEs (new)** — `delegation/README.md` and `brainstorm/README.md` (also clears the two `skill-lint.py` WARNs "no README.md — public face missing").
+- Master + both sub-skills bumped to **0.26.0** (updated 2026-10-28).
 
 ### v0.25.0 (2026-10-28)
 

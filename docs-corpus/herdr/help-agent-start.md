@@ -1,5 +1,5 @@
-# Verbatim capture — 2026-09-02 — do not edit; regenerate with the noted command
-# Source: herdr agent start --help
+# Verbatim capture — 2026-10-28 — do not edit; regenerate with the noted command
+# Source: herdr agent start --help (herdr 0.9.0)
 Start a supported interactive agent in an existing pane
 
 Usage: herdr agent start <NAME> --kind <KIND> --pane <ID> [OPTIONS] [-- [AGENT_ARG]...]
@@ -15,7 +15,7 @@ Options:
       --kind <KIND>
           Supported agent kind and canonical executable
           
-          [possible values: pi, claude, codex, gemini, cursor, devin, agy, cline, omp, mastracode, opencode, copilot, kimi, kiro, droid, amp, grok, hermes, kilo, qodercli, maki]
+          [possible values: pi, claude, codex, gemini, cursor, devin, agy, cline, omp, mastracode, opencode, copilot, kimi, kiro, droid, amp, grok, hermes, kilo, qodercli, qwen, maki, muse]
 
       --pane <ID>
           Existing pane at an interactive shell prompt

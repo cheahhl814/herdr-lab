@@ -1,7 +1,7 @@
 ---
 name: herdr-lab
 description: 'Router for the herdr-lab workflow family. Use when the user mentions Herdr, asks to delegate to another coding agent, run parallel agents / batches, run sudo or another privileged/secret-entry command safely in a managed pane, check another agent''s quota/usage, or brainstorm/debate with other agents (bidirectional critique rounds, devil''s advocate, second opinion). Reads the intent and routes to the matching sub-skill: delegation/SKILL.md (herdr-lab-delegation) or brainstorm/SKILL.md (herdr-lab-brainstorm). Each sub-skill carries its own frontmatter and is independently symlinkable; docs-corpus and bin are shared at the herdr-lab root and reached via per-sub-skill relative symlinks.'
-version: 0.25.0
+version: 0.26.0
 updated: "2026-10-28"
 triggers:
   - user mentions Herdr by name
@@ -13,7 +13,7 @@ requires:
 
 # herdr-lab — router (master)
 
-This file routes; it does not perform. The workflow is split into two independently triggerable sub-skills, each with its own frontmatter and trigger set (matching versions 0.25.0 across master + sub-skills):
+This file routes; it does not perform. The workflow is split into two independently triggerable sub-skills, each with its own frontmatter and trigger set (matching versions 0.26.0 across master + sub-skills):
 
 | User intent | Sub-skill | What it covers |
 | --- | --- | --- |
@@ -30,7 +30,8 @@ This file routes; it does not perform. The workflow is split into two independen
 6. **Shared assets live once at the root.** `docs-corpus/` (offline `--help` captures + online docs for herdr and 7 harnesses) and `bin/herdr-batch.py` live at the herdr-lab root and are reached from each sub-skill directory through the relative symlinks `docs-corpus -> ../docs-corpus` and `bin -> ../bin`. Paths therefore resolve identically whether a sub-skill is loaded through this router or symlinked standalone.
 7. **Standalone use.** Both sub-skills carry their own frontmatter, so either can be symlinked on its own (`herdr-lab-delegation`, `herdr-lab-brainstorm`) and will trigger without this router.
 8. **Tool schemas are the source of truth.** This skill never restates `herdr_layout` / `herdr_pane` / `herdr_agent` parameters, and never invents a herdr CLI flag that is not captured in `docs-corpus/`. Anything the sub-skill asks for that the corpus does not document must be checked against the live `--help` output, not guessed.
+9. **Availability is machine-local, and only a probe knows it.** The docs-corpus says what a harness *supports*; it is a snapshot of another machine's CLIs, not an inventory of this one. When the request depends on which harnesses or models exist, the delegation sub-skill runs its local probe (`bin/herdr-capabilities.py`, §4.6 step 2) on the machine it is running on — never a remembered list, never another box's corpus capture.
 
 ## Versioning
 
-The master router and both sub-skills share one version number (currently 0.25.0). Bump all three together whenever the family changes, and keep `README.md` in sync with the same release.
+The master router and both sub-skills share one version number (currently 0.26.0). Bump all three together whenever the family changes, and keep `README.md` in sync with the same release.

@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.25.0
+version: 0.26.0
 updated: "2026-10-28"
 triggers:
   - user mentions Herdr by name
@@ -118,6 +118,8 @@ Discover model names and quota state at call time — never hardcode a model nam
 
 Re-verify: exact commands, flag syntax, and any numeric caps drift between CLI versions — cross-check `docs-corpus/harnesses/help-<harness>.md` (or re-capture it) before relying on them; do not carry numbers forward from a prior session.
 
+**The corpus describes other machines.** It is a snapshot of the herdr and harness CLIs as they were on the capture host, not an inventory of the machine you are running on. For *availability* (which harnesses and models exist here) use the local probe — `bin/herdr-capabilities.py` (§4.6 step 2). For *flag syntax* (how to call them) the corpus is the right reference, re-verified against the live `--help`.
+
 **Quota probe recipe** (no CLI surface, all harnesses): `herdr_agent start` → `herdr_agent send_keys` the usage slash command (e.g. `/usage`, `/status`) → `herdr_agent read` (`recent-unwrapped`) to record tier/quota — advisory only, format varies by CLI version. Probe before delegating to a hard-cap harness (copilot, agy) or before a parallel batch that could exhaust a shared limit.
 
 **herdr-agent-quota plugin** (source 3, `docs-corpus/herdr/related-plugins.md`) — if installed and configured (`herdr plugin action invoke configure --plugin herdr-agent-quota`, not the raw binary — see below), `claude`/`agy` quota is collected passively by a statusLine/hook the harness itself invokes every turn, not by polling. Read it directly instead of the `refresh`/`dashboard` subcommands (those need pane/session context this skill's ad hoc CLI calls don't have, and return `unavailable` even with real data present):
@@ -155,7 +157,13 @@ Decision procedure — cache discovery in-session per harness/provider after fir
 0. **Routing profile**: read optional `~/.config/herdr/routing.json` (user-owned; skill reads, never writes; schema: per-tier `{harness, provider, model_pattern}` + optional `avoid` list). An exact tier match short-circuits discovery — skip to step 5.
 
 1. Classify the task into a tier (table below).
-2. Discover lazily (first use per session, then reuse): harnesses via `herdr agent start --help` + `docs-corpus/herdr/supported-agents.md`; providers per harness (pi `--provider`/`--list-models`; opencode `opencode models`; copilot provider env vars; codex `model_providers` in config.toml; claude/gemini/agy locked — see `docs-corpus/providers/providers-matrix.md`); models per provider (§4 list commands + `ollama list`, note `:cloud` vs local); Ollama pre-flight (daemon via `ollama ps`, model present via `ollama list` — `ollama pull` is a prerequisite, never implicit).
+2. **Discover this machine's fleet — never another machine's inventory.** The docs-corpus says what a harness *supports*; only a local probe says what *this box* has. The corpus capture is a snapshot of another machine's herdr (0.8.0 = 21 kinds; the 0.9.0 enum = 23), so treat every corpus kind list as stale-by-default and re-read the live CLI:
+   - **a. What herdr can start here** — `herdr agent start --help` → the live `--kind` enum. Never hardcode it; never copy it from the corpus.
+   - **b. What is installed here** — `command -v <canonical executable>` per kind (`qodercli`→`qoder`, `agy`→`agy`/`antigravity-cli`, `kimi`→`kimi`/`kimi-code`, `droid`→`droid`/`factory`).
+   - **c. What is reliable here** — `herdr integration status` → per-agent hook state: `current (vN)` = lifecycle authority (state + session), `outdated (vN < vM)` = works but stale, `not installed` = screen-manifest detection only, which is the §4.7.3 flake risk. It also prints the per-agent hook path, which doubles as an install/auth marker.
+   - **d. What models each seat can use** — per-harness listing: `pi --list-models`, `opencode models`, `ollama list`; harnesses with no CLI list (claude/codex/copilot/agy/gemini) choose the model in-TUI (`/model`) and report quota in-TUI (`/usage`, `/status`).
+   - **e. One probe instead of five commands** — `python3 bin/herdr-capabilities.py` (reached through the `bin/` symlink sibling of this file) runs a–d and prints the fleet table; `--json` for machine use, `--no-models` for a fast pass. Run it **once per session** and reuse the result; re-run it if a seat fails to start (§3).
+   - **f. The inventory is per-machine, and it is the caller's own machine** — a skill file, a corpus capture, a prior session's model list, or the fleet table you saw on another box is *documentation of a different machine*, never availability here. If the probe has not run on this machine in this session, run it (or do a–d by hand) before choosing seats. Report availability truthfully: a missing binary is a fact, not a failure to work around.
 3. Match discovered options against the tier's required properties, never by remembered model name.
 4. **Ask-user gate** — fire ONLY when no profile match AND (T2 task, OR a hard-cap harness is near its probed limit, OR ≥2 candidates tie on all required properties, OR a brainstorm sub-skill run with ≥3 seats, any T2 seat, or a round beyond R2). Use the house Evidence + Recommend + Options convention. Never fire for an unambiguous T0/T1 match or a profile hit — auto-pick. The fleet-level conditions (seat count, harness spread, single-account fleets) are in §4.7.6 and fire on top of these.
 5. State tier + chosen option + one-line reason (profile match / cheapest / fastest / quota constraint) before launching.
@@ -209,7 +217,7 @@ Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recomme
 - **Implementation batches**: consistency wins — the same harness (and family) across seats. Shared conventions, comparable output, one quota plan, cheaper.
 - **Brainstorm / critique seats**: spread across **distinct harnesses AND distinct model families**. Same-model seats share blind spots; three seats on one model are three samples of one prior, not three opinions. Target: `min(seats, usable harnesses)` distinct harnesses, and never two seats on the same model family while a distinct family is available.
 - **The orchestrator counts as a seat.** You (the orchestrator) write your own R0 draft, so your model family is part of the fleet's prior. A 3-seat brainstorm where you are also Claude is one prior sampled three times. Include your own family in the diversity count — if every seat matches you, spread the seats or tell the user the brainstorm has a single prior.
-- **Availability is not guaranteed**: harness kind enum from `herdr agent start --help` + `docs-corpus/herdr/supported-agents.md`; then confirm the harness is actually installed and authenticated on this machine. If only one harness is usable, say so plainly and offer to shrink the fleet — a 3-seat single-model brainstorm is a weak brainstorm — rather than silently padding.
+- **Availability is not guaranteed, and only a local probe can say**: run the §4.6 step-2 probe (`bin/herdr-capabilities.py`) or its manual steps a–d. The corpus kind table is another machine's snapshot (0.8.0 = 21 kinds; 0.9.0 = 23) — use the live `--kind` enum. If only one harness is usable, say so plainly and offer to shrink the fleet — a 3-seat single-model brainstorm is a weak brainstorm — rather than silently padding.
 - **Prefer lifecycle-authority harnesses** (state + session authority: pi, omp, opencode, kimi, kilo, mastracode) for long or unattended batches. Screen-manifest harnesses can settle `idle` while actually waiting for input (`docs-corpus/herdr/supported-agents.md`); a fleet of flaky seats produces flaky rounds.
 - **Avoid for unattended seats**: `gemini` / `cline` ("detected but less thoroughly tested" → expect misclassification) and the no-integration kinds `amp` / `kiro` / `maki` (detection only, no session identity).
 - One harness per seat: do not run two agents of the same kind in one pane, and never drive the same harness from two seats expecting independent state.
@@ -252,7 +260,7 @@ spread: 3 harnesses, 3 model families, 1 local seat | budget: claude acct 1×, c
 reason: 2 independent sub-tasks + 1 cross-check; all seats distinct families
 ```
 
-If the plan changes mid-flight, update the ledger — the ledger, not the context, is the source of truth (§1.6). A seat that was never planned is a seat you cannot verify; a planned seat that never started is a ledger row to mark `lost` (§3), not a silent omission.
+Every harness and model name in the plan must come from the local probe (§4.6 step 2), not from the corpus or from a prior session. If the plan changes mid-flight, update the ledger — the ledger, not the context, is the source of truth (§1.6). A seat that was never planned is a seat you cannot verify; a planned seat that never started is a ledger row to mark `lost` (§3), not a silent omission.
 
 ## §5 Privileged & secret-entry commands (sudo pattern)
 

@@ -4,6 +4,19 @@
 > verbatim `herdr agent start --help` kind enum (`../harnesses/herdr-supported-kinds.txt`).
 > Docs snapshot 0.8.2 vs installed CLI 0.8.0 — re-capture the kind enum if a kind is rejected.
 
+## Re-verification 2026-10-28 (herdr 0.9.0) — the enum moved
+
+The kind enum was re-captured on a 0.9.0 binary (`help-agent-start.md`, `../harnesses/herdr-supported-kinds.txt`,
+both regenerated 2026-10-28). The 0.8.0 enum had 21 kinds; **0.9.0 has 23** — `qwen` is now a
+real `--kind` (it was docs-only in 0.8.0) and `muse` is new. `muse` has no entry in the 0.8.2
+docs snapshot: treat it as undocumented — verify it behaves like a normal harness before
+putting it in a fleet.
+
+**Consequence for the skill:** the kind list in this file is a *snapshot of a machine*, not
+the live truth. Never copy kinds from here — read the live `--kind` enum
+(`herdr agent start --help`) or run the local probe `bin/herdr-capabilities.py`
+(SKILL.md §4.6 step 2), which also reports which of these are actually installed here.
+
 ## Full cross-reference
 
 | # | herdr kind (`agent start --kind`) | Docs name | State authority | Integration role |
@@ -29,7 +42,8 @@
 | 19 | `kilo` | Kilo Code CLI | lifecycle plugin if installed, else screen manifest | state + session |
 | 20 | `qodercli` | Qoder CLI | screen manifest | session |
 | 21 | `maki` | Maki | screen manifest | **none** |
-| — | *(no kind)* | Qwen Code | screen manifest (docs list it; kind enum has no `qwen`) | session |
+| 22 | `qwen` | Qwen Code | screen manifest | session | — *added in 0.9.0; was docs-only in 0.8.0* |
+| 23 | `muse` | *(undocumented in the 0.8.2 docs snapshot)* | unknown — verify | unknown | — *new in 0.9.0* |
 | — | `gemini`, `cline` | — | see ⚠️ rows above | — |
 
 ## Detection & state rules that affect the skill's workflow
@@ -50,7 +64,8 @@
 - **Gemini CLI and Cline**: detected but "less thoroughly tested" → expect more
   misclassifications; verify output extra carefully when delegating to them.
 - **Qwen Code**: listed in docs but absent from the 0.8.0 `--kind` enum — may require a
-  newer herdr binary to start via `herdr agent start`.
+  newer herdr binary to start via `herdr agent start`. **Resolved on 0.9.0**: `qwen` is now in
+  the enum (see the re-verification note above).
 
 ## Wrapper / environment gotchas
 
