@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.24.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.24.1-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.24.0** (updated 2026-10-14). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. See [Changelog](#changelog).
+> Current version: **v0.24.1** (updated 2026-10-28). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. See [Changelog](#changelog).
 
 ## Contents
 
@@ -51,10 +51,15 @@ git clone https://github.com/cheahhl814/herdr-lab.git
 # Symlink into your agent's skills directory. On Pi:
 mkdir -p ~/.pi/agent/skills
 ln -sf "$(pwd)/herdr-lab" ~/.pi/agent/skills/herdr-lab
-# Each sub-skill also runs standalone (own frontmatter):
+# Each sub-skill also runs standalone (own frontmatter).
+# Keep the symlink name == the sub-skill's frontmatter name, so the
+# directory a skill is discovered under and the skill it declares agree:
 ln -sf "$(pwd)/herdr-lab/delegation" ~/.pi/agent/skills/herdr-lab-delegation
 ln -sf "$(pwd)/herdr-lab/brainstorm" ~/.pi/agent/skills/herdr-lab-brainstorm
 ```
+
+> [!TIP]
+> If your harness reads `~/.agents/skills/` instead of `~/.pi/agent/skills/`, symlink into that directory instead — same three links, same names. Both the router (`herdr-lab`) and the two sub-skills (`herdr-lab-delegation`, `herdr-lab-brainstorm`) are then discovered independently, and each sub-skill's `docs-corpus` / `bin` symlinks still resolve.
 
 The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/herdr-batch.py`, the §1.6 batch ledger) is stdlib-only.
 
@@ -131,12 +136,16 @@ git rev-parse --verify origin/main             # upstream HEAD
 
 ## Hard guarantees
 
-- **Workflow-only, no tool redefinition** — `SKILL.md` never restates `herdr_layout` / `herdr_pane` / `herdr_agent` parameters; it only orders calls and lists recovery paths. Drift rule at the bottom of SKILL.md enforces this.
+- **Workflow-only, no tool redefinition** — `SKILL.md` never restates `herdr_layout` / `herdr_pane` / `herdr_agent` parameters; it only orders calls and lists recovery paths. Drift rule at the bottom of SKILL.md enforces this. The router `SKILL.md` and both sub-skills each end with that drift rule.
 - **Schema-grounded tool usage** — when the skill recommends a herdr CLI flag, the recommendation is grounded in `docs-corpus/herdr/` captures, not the agent's memory.
 - **Push-UIs over poll loops** — every checkpoint that would otherwise need polling uses `ask_user_question` as a blocking gate (one tool call, zero LLM tokens while waiting). Polling loops with `bash sleep` + `herdr_pane read` are explicitly forbidden.
 - **Shared assets via symlinks** — `docs-corpus/` and `bin/` live once at the root; per-sub-skill relative symlinks keep every path inside the sub-skill SKILL.mds resolving, whether loaded via the router or as a symlinked standalone skill.
 
 ## Changelog
+
+### v0.24.1 (2026-10-28)
+
+**Fixed the router body, which shipped truncated in v0.24.0.** The v0.24.0 commit left `SKILL.md` cut off mid-table (the body ended at the table header `| User intent | Sub-skill | What it covers |` with zero rows), so the router had no routing rows, no dispatch rules, and no drift rule — it could not route. The router body is now complete: the intent → sub-skill mapping table (delegation §1-§5 vs. brainstorm R0→R1→R2), eight dispatch rules (one-shot question vs. critique exchange, "brainstorm also needs delegation" because the brainstorm protocol references "delegation §N", mixed request = brainstorm then delegate, shared-assets location, standalone symlink use, tool-schema-is-source-of-truth), and a shared-versioning note. Frontmatter is unchanged apart from the version bump. Master + both sub-skills now carry version **0.24.1** and `updated: "2026-10-28"`. No workflow text in the sub-skills changed.
 
 ### v0.24.0 (2026-10-14)
 

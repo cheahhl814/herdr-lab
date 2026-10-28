@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-brainstorm
 description: 'herdr-lab brainstorming mode — bidirectional multi-agent critique rounds over herdr panes, not a one-shot opinion poll. R0 independent draft (orchestrator writes its own first, anti-anchoring), R1 anonymized cross-critique relay (positions shuffled, verbatim seat-written fields, no tallies), R2 decision round only if disagreement remains (rank / vote / evidence-check by sub-mode), synthesis with a Dissent section. Anti-sycophancy countermeasures built in (seat isolation, RELAY FIDELITY self-check, CHANGED: yes must cite a named verified argument, orchestrator never votes). Use when the user wants to brainstorm, debate, cross-examine / stress-test a design, get a devil''s advocate or a second opinion with critique, or have agents argue it out and converge. References herdr-lab-delegation''s sections (§N) for topology, verification, recovery, ledger, and task-tier seating.'
-version: 0.24.0
-updated: "2026-10-14"
+version: 0.24.1
+updated: "2026-10-28"
 triggers:
   - brainstorm / debate / get a second opinion *with critique* together with other agents (bidirectional critique rounds, not a one-shot opinion poll)
   - cross-examine / stress-test / poke holes in my design or plan using another agent

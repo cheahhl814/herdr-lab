@@ -5,6 +5,9 @@ BRIEF.md
 # Generated semantic codebase index (regenerable cache: SQLite DB, vectors, worker leases)
 .codebase-index/
 
+# §1.6 batch-ledger runtime state (per-batch JSON rows, never published)
+.herdr-batch/
+
 # bioinfo-skill-creator run artifact (stale generated metadata, not consumed by the skill)
 params.json
 
