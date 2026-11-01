@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.26.0
-updated: "2026-10-28"
+version: 0.27.0
+updated: "2026-11-01"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -39,7 +39,7 @@ Herdr tools are opt-in: only use them when the user explicitly invokes this work
 
 > **zoetrope plugin** (source 3, `docs-corpus/herdr/related-plugins.md`) — if installed, this is the user's own answer to "I can't see what the secondary agent is doing" (§1 step 4's concern): focusing a claude/codex agent pane and pressing `prefix+shift+z` opens a live flow-graph overlay of that session for the **user** to watch directly — it doesn't change what you (the calling agent) do, but mention it exists when delegating so the user knows they have a real-time option beyond waiting for your relay.
 > 
-> Non-interactive/print-mode invocations (`-p`, `exec`, `--print`, etc., run via `herdr_pane run` instead of `herdr_agent`) have no lifecycle, no §2 states, and none of the §3 recovery paths — a blocked or approval-seeking sub-agent just hangs silently with nothing to read. Reserve this mode for the T3 one-shot case in §4.6 (short, read-only, unlikely to need approval); default to interactive `herdr_agent` delegation for everything else so state and output stay observable.
+> **No headless harness launches — ever.** The primary harness never launches another harness in headless/non-interactive mode: no `-p` / `--print` / `-ne` / `exec` / piped-stdin invocation of a harness CLI, whether via `herdr_pane run` or a direct shell call. Such invocations have no lifecycle, no §2 states, and none of the §3 recovery paths — a blocked or approval-seeking sub-agent hangs silently with nothing to read, and a finished one leaves only a transcript to scrape after the fact. This ban is absolute for **all** tiers and task shapes, including the short read-only T3 case (§4.6) — there is no headless exception anywhere in this skill. "One-shot" always means *one delegated opinion delivered via one `herdr_agent prompt` to an interactive seat*, never a headless run.
 
 > CRITICAL: `herdr_agent start` never creates or changes layout. If no pane exists yet, step 1 is mandatory — never call `start` against a pane you have not just split or confirmed idle.
 
@@ -177,7 +177,7 @@ Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recomme
 | **T2** heavy agentic    | multi-file refactor, cross-cutting changes, long planning | large context, strongest reasoning + tool-use, cost-insensitive OK |
 | **T3** read-only/review | code review, analysis, research, quota probes             | read-only/plan mode (pair with §4.5)                               |
 
-**T3 note**: for short read-only reviews, prefer a one-shot (`claude -p --permission-mode plan` with file redirect) over an interactive plan-mode session — TUI redraw/truncation makes short answers hard to retrieve via `herdr_agent read`, and settling `idle` while the TUI still shows "Generating…" is a known false-settlement flavor.
+**T3 note**: even for short read-only reviews, use an interactive plan-mode session (`herdr_agent start` with plan-mode `agentArgs` per §4.5) — never a headless run like `claude -p` (the no-headless rule in §1 is absolute, all tiers). The retrieval problems that once motivated headless runs are already solved in §2: read the response via `herdr-convo latest --text` (claude/codex/opencode/pi — reads the transcript file directly, bypassing TUI redraw/truncation), or have the agent write its full answer to a temp `.md` file and read that. If the seat settles `idle` while the TUI still shows "Generating…", treat it as the known false-settlement flavor and verify per §2/§3 before accepting.
 **Ollama note**: `:cloud` models proxy to Ollama's hosted service (account + egress required); local models run on-box, offline/private, need VRAM headroom, weaker at T2 work.
 **Refusals**: never sum/infer shared quota across harnesses proxying the same provider account — probes are harness-local only. Verify the active provider before trusting a probe/cost estimate. Custom-provider API keys/base-URLs follow §5. Never change a harness's provider config without asking first.
 

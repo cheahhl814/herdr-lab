@@ -177,8 +177,17 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **Schema-grounded tool usage** — when the skill recommends a herdr CLI flag, the recommendation is grounded in `docs-corpus/herdr/` captures, not the agent's memory.
 - **Push-UIs over poll loops** — every checkpoint that would otherwise need polling uses `ask_user_question` as a blocking gate (one tool call, zero LLM tokens while waiting). Polling loops with `bash sleep` + `herdr_pane read` are explicitly forbidden.
 - **Shared assets via symlinks** — `docs-corpus/` and `bin/` live once at the root; per-sub-skill relative symlinks keep every path inside the sub-skill SKILL.mds resolving, whether loaded via the router or as a symlinked standalone skill.
+- **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.27.0 (2026-11-01)
+
+**Removed the last headless-launch exception: the primary harness never launches another harness in headless mode.** v0.26.0 and earlier still permitted print-mode invocations (`-p` / `exec` / `--print` via `herdr_pane run`) for the short read-only T3 case — §4.6's T3 note explicitly preferred `claude -p` one-shots. That exception is gone:
+
+- **§1 note rewritten as an absolute ban.** "No headless harness launches — ever": no `-p` / `--print` / `-ne` / `exec` / piped-stdin invocation of any harness CLI, via `herdr_pane run` or a direct shell call, for any tier. Rationale unchanged (no lifecycle, no §2 states, no §3 recovery — a blocked sub-agent hangs silently). "One-shot" now explicitly means *one delegated opinion via one `herdr_agent prompt` to an interactive seat*, never a headless run.
+- **§4.6 T3 note rewritten.** T3 short reviews use an interactive plan-mode session (§4.5). The retrieval concerns that motivated headless runs are answered by existing §2 paths: `herdr-convo latest --text` (claude/codex/opencode/pi — reads the transcript directly, bypassing TUI truncation) or a temp-`.md`-file fallback; the "Generating… / `idle`" pattern remains a documented false-settlement flavor (§2/§3).
+- Version bumped to 0.27.0 across router + both sub-skills; no changes to brainstorm workflow text (its seats already launch via delegation §1, which is now ban-covered).
 
 ### v0.26.0 (2026-10-28)
 
