@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.26.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.27.1-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.26.0** (updated 2026-10-28). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill. See [Changelog](#changelog).
+> Current version: **v0.27.1** (updated 2026-11-04). The workflow is split into a router master + two independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5) and `herdr-lab-brainstorm`. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.27.1 adds a workspace-hygiene expectation line to delegation §1 step 4 task briefs. See [Changelog](#changelog).
 
 ## Contents
 
@@ -180,6 +180,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.27.1 (2026-11-04)
+
+**Workspace-hygiene expectation in delegation §1 step 4 task briefs.** The `workspace-hygiene` pi extension only hooks pi itself — secondary harnesses (claude/codex/opencode/agy/…) get no hygiene prompt from it, so delegation briefs now carry the expectation explicitly: keep the workspace tidy, clean up scratch/untracked files created by the task before finishing, and expect a post-run delta notice from the primary pi session (>5 new untracked files, >100 MB generated-dir growth; notice-only, nothing auto-deleted, but leaving more behind is a failed task). Patch release: delegation/SKILL.md only; router and brainstorm text unchanged.
 
 ### v0.27.0 (2026-11-01)
 

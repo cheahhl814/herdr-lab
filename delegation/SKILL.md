@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.27.0
-updated: "2026-11-01"
+version: 0.27.1
+updated: "2026-11-04"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -34,6 +34,7 @@ Herdr tools are opt-in: only use them when the user explicitly invokes this work
    - `kind` = the recognized agent to start.
    - `agentArgs` optional — see §4 for model flags.
 4. `herdr_agent prompt` with wait enabled (default). Do not skip waiting unless the **user** explicitly asked for fire-and-forget — never choose it yourself for convenience, since it removes the user's only visibility into the secondary agent.
+   - **Workspace hygiene expectation (carried from working agreement):** when the delegating workspace runs pi with the `workspace-hygiene` extension, delegated agents inherit its guidelines only if pi is the primary harness — secondary harnesses (claude/codex/opencode/agy/…) get no such hook, so state the expectation in the task brief itself: keep the workspace tidy, clean up scratch/untracked files you created before finishing, and expect a post-run delta notice (new untracked files > 5, generated-dir growth > 100 MB) from the primary pi session. Notice-only — nothing is auto-deleted — but leaving more than that behind is a failed task.
    - **Batch dispatch (2+ agents, tab topology):** a batch is only parallel if all prompts are sent before any wait begins. Round 1 — `herdr_agent prompt` each agent with `until: ["working"]` (returns as soon as the agent accepts the prompt; `--until` requires wait enabled, per `docs-corpus/herdr/online-docs-0.8.2/cli-reference.md`). Round 2 — `herdr_agent wait` on every agent (`--until` `done`/`idle`/`blocked`), servicing `blocked` agents per §3 as they surface. This is NOT fire-and-forget: the batch is finished only when every agent has been waited on and verified per §2, and each agent's result is still relayed individually. Record tab/pane/agent IDs in the §1.6 batch ledger as you go. **Staged dispatch for expensive or hard-to-verify batches:** when the outputs are costly or slow to verify (image/doc generation, long migrations, anything with no cheap pass/fail marker), do NOT dispatch all N at once — send 1 first, verify it per §2 (spot-check a representative case, not an edge case), and only then dispatch the remainder; the un-verified remainder is where a systemic defect multiplies N times.
 5. `herdr_agent read` (or **herdr-convo**, below, for claude/codex/opencode/pi) — read and verify per §2 before treating the task as done, then relay the secondary agent's actual output (not just "done") back to the user — they cannot see the pane unless they look at it themselves.
 
