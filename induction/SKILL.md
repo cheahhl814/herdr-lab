@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-induction
 description: herdr-lab harness induction — introduce the primary harness to an installed secondary harness, or refresh one already known. Captures --help and the version (bin/herdr-induct.py), ingests official docs into docs-corpus/ with the optional docs-ingest skill, fills a harness card (flags, quota surface, login check), then proves the harness works with one live interactive herdr seat. Use when the user wants to add, introduce, onboard, or induct a new harness or coding agent, or refresh, re-capture, or update the docs for one. Writes to the repo working tree for review; never commits, installs a harness, or changes credentials or routing. References herdr-lab-delegation sections (§N) for the seat itself.
-version: 0.28.1
+version: 0.28.2
 updated: "2026-11-06"
 triggers:
   - introduce / onboard / induct a new harness or coding agent to herdr-lab

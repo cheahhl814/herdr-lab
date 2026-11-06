@@ -28,9 +28,12 @@ import sys
 HERE = os.path.dirname(os.path.realpath(__file__))
 HARNESS_DIR = os.path.join(os.path.dirname(HERE), "docs-corpus", "harnesses")
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
-SENSITIVE_ENV_RE = re.compile(r"KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|AUTH", re.I)
-# CLIs built on clap print live values as `[env: NAME=value]` in --help.
-ENV_HINT_RE = re.compile(r"\[env:\s*([A-Za-z_][A-Za-z0-9_]*)=[^\]]*\]")
+# Allowlist, not denylist: a credential can have any name (DATABASE_URL).
+SAFE_ENV_RE = re.compile(r"(PATH|HOME|USER|LOGNAME|SHELL|TERM|TMPDIR|LANG|LC_[A-Z]+)")
+# CLIs built on clap print live values as `[env: NAME=value]` in --help. A value
+# can contain `]`, so everything to the end of the line goes.
+ENV_HINT_RE = re.compile(r"\[env:\s*([A-Za-z_][A-Za-z0-9_]*)=.*$", re.M)
+URL_USERINFO_RE = re.compile(r"(://)[^/\s@]+@")
 TOKEN_RE = re.compile(
     r"\bsk-[A-Za-z0-9_-]{16,}|\bgh[pousr]_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}"
     r"|\bAKIA[0-9A-Z]{16}\b|\bAIza[0-9A-Za-z_-]{30,}|(?i:\bbearer\s+[A-Za-z0-9._-]{20,})")
@@ -73,6 +76,7 @@ def scrub(text, home=None, user=None, host=None):
     hosts = {host} if host else {socket.gethostname(), socket.getfqdn()}
     text = ANSI_RE.sub("", text)
     text = ENV_HINT_RE.sub(r"[env: \1=<redacted>]", text)
+    text = URL_USERINFO_RE.sub(r"\1<redacted>@", text)
     text = TOKEN_RE.sub("<redacted>", text).replace(home, "$HOME")
     text = re.sub(rf"\b{re.escape(user)}\b", "$USER", text, flags=re.I)
     # Longest first, so an FQDN isn't left half-replaced by its short name.
@@ -82,12 +86,12 @@ def scrub(text, home=None, user=None, host=None):
 
 
 def safe_env():
-    """The environment minus anything that looks like a credential."""
-    return {k: v for k, v in os.environ.items() if not SENSITIVE_ENV_RE.search(k)}
+    """Only the variables a CLI needs to print its help."""
+    return {k: v for k, v in os.environ.items() if SAFE_ENV_RE.fullmatch(k)}
 
 
 def harness_output(exe, flag, timeout):
-    """Run `exe flag` with stdin closed and no credentials in its environment.
+    """Run `exe flag` with stdin closed and an allowlisted environment.
 
     Returns stdout, or None on failure. stderr is used only when stdout is
     empty: logs and warnings don't belong in a published file, but some CLIs

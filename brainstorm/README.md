@@ -1,6 +1,6 @@
 # herdr-lab-brainstorm
 
-**Skill name**: `herdr-lab-brainstorm` · **Version**: 0.28.1 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-brainstorm` · **Version**: 0.28.2 · **Type**: agent skill (workflow-only)
 
 The brainstorming mode of the [herdr-lab](https://github.com/cheahhl814/herdr-lab) family: bidirectional multi-agent critique rounds over [herdr](https://github.com/ogulcancelik/herdr) panes — not a one-shot opinion poll. Agents take independent positions, critique each other's arguments in an anonymized relay, and the group converges on a decision with the losing argument preserved.
 

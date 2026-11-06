@@ -16,14 +16,21 @@ assert out == "$HOME/x $USER@$HOSTNAME joanne", out
 assert induct.harness_output("/no/such/exe", "--help", 5) is None
 
 # Scrub: live values printed by a CLI, token shapes, identity in any case.
-out = induct.scrub("--key [env: FOO_KEY=hunter2] sk-abcdefghijklmnop1234 ANN BOX.lan",
+out = induct.scrub("--key [env: FOO_KEY=hun]ter2] [default: x]\n"
+                   "sk-abcdefghijklmnop1234 https://bob:pw@host/x ANN BOX.lan",
                    "/home/ann", "ann", "box.lan")
-assert out == "--key [env: FOO_KEY=<redacted>] <redacted> $USER $HOSTNAME", out
+assert out == ("--key [env: FOO_KEY=<redacted>]\n"
+               "<redacted> https://<redacted>@host/x $USER $HOSTNAME"), out
 
-# The harness never receives credentials, and stderr is ignored if stdout has text.
+# Allowlist: a credential with an innocent name is dropped too, and a name
+# that only contains an allowed word doesn't get through.
 os.environ["DEMO_API_KEY"] = "hunter2"
-assert "DEMO_API_KEY" not in induct.safe_env()
-assert "PATH" in induct.safe_env()
+os.environ["DATABASE_URL"] = "postgres://x"
+os.environ["PATHOGEN_TOKEN"] = "hunter2"
+os.environ["LC_ALL"] = "C"
+env = induct.safe_env()
+assert "PATH" in env and "LC_ALL" in env
+assert not {"DEMO_API_KEY", "DATABASE_URL", "PATHOGEN_TOKEN"} & set(env)
 
 with tempfile.TemporaryDirectory() as tmp:
     stub = os.path.join(tmp, "stub")
