@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.27.2
+version: 0.28.0
 updated: "2026-11-06"
 triggers:
   - user mentions Herdr by name
@@ -120,6 +120,8 @@ Discover model names and quota state at call time — never hardcode a model nam
 Re-verify: exact commands, flag syntax, and any numeric caps drift between CLI versions — cross-check `docs-corpus/harnesses/help-<harness>.md` (or re-capture it) before relying on them; do not carry numbers forward from a prior session.
 
 **The corpus describes other machines.** It is a snapshot of the herdr and harness CLIs as they were on the capture host, not an inventory of the machine you are running on. For *availability* (which harnesses and models exist here) use the local probe — `bin/herdr-capabilities.py` (§4.6 step 2). For *flag syntax* (how to call them) the corpus is the right reference, re-verified against the live `--help`.
+
+**Harness cards.** `docs-corpus/harnesses/<kind>-card.md`, where present, holds that harness's flags, quota surface, login check, and last live-test verdict, and takes precedence over the tables here if it is newer. A harness with no card and no row in these tables has no verified flags: run the induction sub-skill (`herdr-lab-induction`) before delegating to it. A card whose live test is not `pass` is not ready for unattended work.
 
 **Quota probe recipe** (no CLI surface, all harnesses): `herdr_agent start` → `herdr_agent send_keys` the usage slash command (e.g. `/usage`, `/status`) → `herdr_agent read` (`recent-unwrapped`) to record tier/quota — advisory only, format varies by CLI version. Probe before delegating to a hard-cap harness (copilot, agy) or before a parallel batch that could exhaust a shared limit.
 

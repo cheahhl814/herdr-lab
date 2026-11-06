@@ -29,6 +29,8 @@ docs-corpus/
     ├── permission-modes.md         CURATED summary: auto-approval/yolo flags per harness
     ├── herdr-supported-kinds.txt   verbatim `herdr agent start --help` kind list
     ├── help-<harness>.md           verbatim `--help` captures (source 1) × 7
+    ├── <kind>-card.md              harness card from the induction sub-skill: flags,
+    │                               quota surface, login check, live-test verdict
     ├── claude-online-docs/        code.claude.com .md: permissions, permission-modes,
     │                              cli-reference, model-config, settings
     ├── codex-online-docs/         github.com/openai/codex docs/: config, sandbox,
@@ -71,6 +73,8 @@ Captured 2026-09-02: herdr 0.8.0 (docs snapshot 0.8.2), Claude Code 2.1.258, cod
 | copilot | Web search to locate pages + .md endpoint | docs.github.com/en/copilot/…/<page>.md |
 
 ## Regenerating
+
+For a harness, prefer the induction sub-skill (`induction/SKILL.md`): it recaptures, stamps the version, scrubs machine details, and live-tests the result.
 
 ```bash
 # Source 1: herdr CLI captures
