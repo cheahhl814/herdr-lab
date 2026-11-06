@@ -22,6 +22,15 @@ Four signals, in order:
                                    (claude/codex/copilot/agy/gemini) report
                                    their in-TUI probe instead.
 
+It then checks ~/.config/herdr/routing.json against those signals, per tier:
+
+  ok          harness installed, model listed here (or `default`)
+  unverified  harness installed, model can't be listed (in-TUI / --no-models)
+  no-harness  harness not on PATH -> do not honour this tier
+  no-model    model not in the live list -> do not honour this tier
+
+`stale` is true when `_updated` is older than ROUTING_MAX_AGE_DAYS. Read-only.
+
 Usage:
   python3 bin/herdr-capabilities.py              # human table
   python3 bin/herdr-capabilities.py --json       # machine-readable
@@ -33,6 +42,8 @@ credential values — only executable paths, hook paths, and model names.
 """
 
 import argparse
+import datetime
+import fnmatch
 import json
 import os
 import re
@@ -104,6 +115,10 @@ KIND_RE = re.compile(r"\[possible values:\s*([^\]]+)\]")
 INTEGRATION_RE = re.compile(r"^(?P<name>[^:]+):\s+(?P<rest>.+)$")
 PAREN_RE = re.compile(r"\(([^)]*)\)")
 VERSION_RE = re.compile(r"herdr\s+(\S+)")
+
+ROUTING_PATH = os.path.expanduser("~/.config/herdr/routing.json")
+ROUTING_MAX_AGE_DAYS = 60
+ROUTING_TIERS = ("T0", "T1", "T2", "T3")
 
 
 def run(cmd, timeout):
@@ -329,7 +344,50 @@ def probe(timeout, with_models):
     families = distinct_families(all_models + ollama_models)
     report["distinct_model_families_heuristic"] = families
     report["distinct_model_family_count_heuristic"] = len(families)
+    report["routing"] = check_routing(report)
     return report
+
+
+def check_routing(report, path=ROUTING_PATH, today=None):
+    """Check the user's routing profile against this probe. None if absent."""
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            profile = json.load(fh)
+    except (OSError, ValueError) as exc:
+        return {"error": f"unreadable: {exc}", "tiers": {}, "stale": False,
+                "updated": None}
+
+    harnesses = {h["kind"]: h for h in report["harnesses"]}
+    tiers = {}
+    for tier in ROUTING_TIERS:
+        entry = profile.get(tier)
+        if not entry:
+            continue
+        seat = harnesses.get(entry.get("harness"))
+        pattern = entry.get("model_pattern", "default")
+        if not seat or not seat["installed"]:
+            status = "no-harness"
+        elif pattern == "default":
+            status = "ok"
+        elif seat["models"] is None:
+            status = "unverified"
+        else:
+            # pi lists provider:model, opencode lists provider/model.
+            wanted = [f"{entry.get('provider')}{sep}{pattern}" for sep in ":/"]
+            hit = any(fnmatch.fnmatchcase(m, w) for m in seat["models"] for w in wanted)
+            status = "ok" if hit else "no-model"
+        tiers[tier] = {**entry, "status": status}
+
+    today = today or datetime.date.today()
+    try:
+        updated = datetime.date.fromisoformat(profile.get("_updated", ""))
+        stale = (today - updated).days > ROUTING_MAX_AGE_DAYS
+    except ValueError:
+        stale = True  # undated picks can't be trusted as current
+    return {"error": None, "tiers": tiers, "stale": stale,
+            "updated": profile.get("_updated")}
 
 
 def print_table(report):
@@ -365,6 +423,16 @@ def print_table(report):
               f"(e.g. {', '.join(report['ollama_models'][:3])})")
     count = report.get("distinct_model_family_count_heuristic", 0)
     print(f"distinct model families (heuristic): {count}")
+    routing = report.get("routing")
+    if routing:
+        print()
+        age = "STALE, review picks" if routing["stale"] else "fresh"
+        print(f"routing profile: updated {routing['updated']} ({age})")
+        if routing["error"]:
+            print(f"  {routing['error']}")
+        for tier, e in routing["tiers"].items():
+            print(f"  {tier}: {e['status']:<11} {e.get('harness')} "
+                  f"{e.get('provider')} {e.get('model_pattern')}")
     if report.get("errors"):
         print()
         print("errors:")

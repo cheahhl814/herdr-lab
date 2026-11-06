@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.27.1
-updated: "2026-11-04"
+version: 0.27.2
+updated: "2026-11-06"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -155,7 +155,7 @@ Most harnesses block shell commands by default. Pass the flag via `herdr_agent s
 ## §4.6 Provider preflight & task-tier matching
 
 Decision procedure — cache discovery in-session per harness/provider after first run:
-0. **Routing profile**: read optional `~/.config/herdr/routing.json` (user-owned; skill reads, never writes; schema: per-tier `{harness, provider, model_pattern}` + optional `avoid` list). An exact tier match short-circuits discovery — skip to step 5.
+0. **Routing profile**: read optional `~/.config/herdr/routing.json` (user-owned; skill reads, never writes; schema: per-tier `{harness, provider, model_pattern}` + optional `avoid` list). A profile entry is a claim, not availability: the step-2e probe checks it (`routing` section). After step 1, a tier marked `ok` or `unverified` skips to step 5 (`unverified` = model not listable from the CLI, confirm in-TUI). A tier marked `no-harness` or `no-model` counts as no entry: say so and continue from step 2. If the profile is marked `stale`, still honour it, but tell the user once that its picks need review.
 
 1. Classify the task into a tier (table below).
 2. **Discover this machine's fleet — never another machine's inventory.** The docs-corpus says what a harness *supports*; only a local probe says what *this box* has. The corpus capture is a snapshot of another machine's herdr (0.8.0 = 21 kinds; the 0.9.0 enum = 23), so treat every corpus kind list as stale-by-default and re-read the live CLI:
@@ -163,7 +163,7 @@ Decision procedure — cache discovery in-session per harness/provider after fir
    - **b. What is installed here** — `command -v <canonical executable>` per kind (`qodercli`→`qoder`, `agy`→`agy`/`antigravity-cli`, `kimi`→`kimi`/`kimi-code`, `droid`→`droid`/`factory`).
    - **c. What is reliable here** — `herdr integration status` → per-agent hook state: `current (vN)` = lifecycle authority (state + session), `outdated (vN < vM)` = works but stale, `not installed` = screen-manifest detection only, which is the §4.7.3 flake risk. It also prints the per-agent hook path, which doubles as an install/auth marker.
    - **d. What models each seat can use** — per-harness listing: `pi --list-models`, `opencode models`, `ollama list`; harnesses with no CLI list (claude/codex/copilot/agy/gemini) choose the model in-TUI (`/model`) and report quota in-TUI (`/usage`, `/status`).
-   - **e. One probe instead of five commands** — `python3 bin/herdr-capabilities.py` (reached through the `bin/` symlink sibling of this file) runs a–d and prints the fleet table; `--json` for machine use, `--no-models` for a fast pass. Run it **once per session** and reuse the result; re-run it if a seat fails to start (§3).
+   - **e. One probe instead of five commands** — `python3 bin/herdr-capabilities.py` (reached through the `bin/` symlink sibling of this file) runs a–d and prints the fleet table; `--json` for machine use, `--no-models` for a fast pass. It also validates the routing profile. Run it **once per session** and reuse the result; re-run it if a seat fails to start (§3).
    - **f. The inventory is per-machine, and it is the caller's own machine** — a skill file, a corpus capture, a prior session's model list, or the fleet table you saw on another box is *documentation of a different machine*, never availability here. If the probe has not run on this machine in this session, run it (or do a–d by hand) before choosing seats. Report availability truthfully: a missing binary is a fact, not a failure to work around.
 3. Match discovered options against the tier's required properties, never by remembered model name.
 4. **Ask-user gate** — fire ONLY when no profile match AND (T2 task, OR a hard-cap harness is near its probed limit, OR ≥2 candidates tie on all required properties, OR a brainstorm sub-skill run with ≥3 seats, any T2 seat, or a round beyond R2). Use the house Evidence + Recommend + Options convention. Never fire for an unambiguous T0/T1 match or a profile hit — auto-pick. The fleet-level conditions (seat count, harness spread, single-account fleets) are in §4.7.6 and fire on top of these.
