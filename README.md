@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.28.2-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.28.3-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.28.2** (updated 2026-11-06). The workflow is split into a router master + three independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, and `herdr-lab-induction`. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
+> Current version: **v0.28.3** (updated 2026-11-06). The workflow is split into a router master + three independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, and `herdr-lab-induction`. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
 
 ## Contents
 
@@ -189,6 +189,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.28.3 (2026-11-06)
+
+**URL password redaction in induction captures now runs to the last `@`.** A password containing `@` or `/` previously left its tail exposed. Over-redaction is accepted as the safe direction. Multi-line `[env: ...]` values were reviewed and left as they are: harnesses only receive the allowlisted environment, so a secret can't appear in one. Found by automated security review.
 
 ### v0.28.2 (2026-11-06)
 

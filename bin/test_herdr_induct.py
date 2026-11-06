@@ -22,6 +22,10 @@ out = induct.scrub("--key [env: FOO_KEY=hun]ter2] [default: x]\n"
 assert out == ("--key [env: FOO_KEY=<redacted>]\n"
                "<redacted> https://<redacted>@host/x $USER $HOSTNAME"), out
 
+# Passwords containing `@` or `/` leave nothing behind.
+out = induct.scrub("https://bob:p@ss/w@rd@host/x", "/home/ann", "ann", "box")
+assert out == "https://<redacted>@host/x", out
+
 # Allowlist: a credential with an innocent name is dropped too, and a name
 # that only contains an allowed word doesn't get through.
 os.environ["DEMO_API_KEY"] = "hunter2"

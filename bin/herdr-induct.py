@@ -33,7 +33,8 @@ SAFE_ENV_RE = re.compile(r"(PATH|HOME|USER|LOGNAME|SHELL|TERM|TMPDIR|LANG|LC_[A-
 # CLIs built on clap print live values as `[env: NAME=value]` in --help. A value
 # can contain `]`, so everything to the end of the line goes.
 ENV_HINT_RE = re.compile(r"\[env:\s*([A-Za-z_][A-Za-z0-9_]*)=.*$", re.M)
-URL_USERINFO_RE = re.compile(r"(://)[^/\s@]+@")
+# Greedy to the last `@`: a password can contain `@` or `/`. Over-redacting is safe.
+URL_USERINFO_RE = re.compile(r"(://)\S*@")
 TOKEN_RE = re.compile(
     r"\bsk-[A-Za-z0-9_-]{16,}|\bgh[pousr]_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}"
     r"|\bAKIA[0-9A-Z]{16}\b|\bAIza[0-9A-Za-z_-]{30,}|(?i:\bbearer\s+[A-Za-z0-9._-]{20,})")
