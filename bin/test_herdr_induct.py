@@ -15,11 +15,23 @@ assert out == "$HOME/x $USER@$HOSTNAME joanne", out
 
 assert induct.harness_output("/no/such/exe", "--help", 5) is None
 
+# Scrub: live values printed by a CLI, token shapes, identity in any case.
+out = induct.scrub("--key [env: FOO_KEY=hunter2] sk-abcdefghijklmnop1234 ANN BOX.lan",
+                   "/home/ann", "ann", "box.lan")
+assert out == "--key [env: FOO_KEY=<redacted>] <redacted> $USER $HOSTNAME", out
+
+# The harness never receives credentials, and stderr is ignored if stdout has text.
+os.environ["DEMO_API_KEY"] = "hunter2"
+assert "DEMO_API_KEY" not in induct.safe_env()
+assert "PATH" in induct.safe_env()
+
 with tempfile.TemporaryDirectory() as tmp:
     stub = os.path.join(tmp, "stub")
     for body, expected in (("exit 0", None),  # empty output is a failure
                            ("echo hi; exit 1", None),
-                           ("echo hi", "hi")):
+                           ("echo hi", "hi"),
+                           ('echo "$DEMO_API_KEY" >&2; echo "[$DEMO_API_KEY]"', "[]"),
+                           ("echo help >&2", "help")):  # stderr-only help, as opencode does
         with open(stub, "w") as fh:
             fh.write(f"#!/bin/sh\n{body}\n")
         os.chmod(stub, 0o755)

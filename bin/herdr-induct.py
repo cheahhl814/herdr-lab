@@ -28,6 +28,12 @@ import sys
 HERE = os.path.dirname(os.path.realpath(__file__))
 HARNESS_DIR = os.path.join(os.path.dirname(HERE), "docs-corpus", "harnesses")
 ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+SENSITIVE_ENV_RE = re.compile(r"KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|AUTH", re.I)
+# CLIs built on clap print live values as `[env: NAME=value]` in --help.
+ENV_HINT_RE = re.compile(r"\[env:\s*([A-Za-z_][A-Za-z0-9_]*)=[^\]]*\]")
+TOKEN_RE = re.compile(
+    r"\bsk-[A-Za-z0-9_-]{16,}|\bgh[pousr]_[A-Za-z0-9]{20,}|\bgithub_pat_[A-Za-z0-9_]{20,}"
+    r"|\bAKIA[0-9A-Z]{16}\b|\bAIza[0-9A-Za-z_-]{30,}|(?i:\bbearer\s+[A-Za-z0-9._-]{20,})")
 
 _spec = importlib.util.spec_from_file_location(
     "herdr_capabilities", os.path.join(HERE, "herdr-capabilities.py"))
@@ -61,24 +67,39 @@ Written by the herdr-lab induction sub-skill. `TODO` means not yet established.
 
 
 def scrub(text, home=None, user=None, host=None):
-    """Remove terminal escapes and machine identity from captured output."""
+    """Remove terminal escapes, secrets and machine identity from captured output."""
     home = home or os.path.expanduser("~")
     user = user or getpass.getuser()
-    host = host or socket.gethostname()
-    text = ANSI_RE.sub("", text).replace(home, "$HOME")
-    text = re.sub(rf"\b{re.escape(user)}\b", "$USER", text)
-    return re.sub(rf"\b{re.escape(host)}\b", "$HOSTNAME", text)
+    hosts = {host} if host else {socket.gethostname(), socket.getfqdn()}
+    text = ANSI_RE.sub("", text)
+    text = ENV_HINT_RE.sub(r"[env: \1=<redacted>]", text)
+    text = TOKEN_RE.sub("<redacted>", text).replace(home, "$HOME")
+    text = re.sub(rf"\b{re.escape(user)}\b", "$USER", text, flags=re.I)
+    # Longest first, so an FQDN isn't left half-replaced by its short name.
+    for name in sorted(hosts - {"", "localhost"}, key=len, reverse=True):
+        text = re.sub(rf"\b{re.escape(name)}\b", "$HOSTNAME", text, flags=re.I)
+    return text
+
+
+def safe_env():
+    """The environment minus anything that looks like a credential."""
+    return {k: v for k, v in os.environ.items() if not SENSITIVE_ENV_RE.search(k)}
 
 
 def harness_output(exe, flag, timeout):
-    """Run `exe flag` with stdin closed. Returns text, or None on failure."""
+    """Run `exe flag` with stdin closed and no credentials in its environment.
+
+    Returns stdout, or None on failure. stderr is used only when stdout is
+    empty: logs and warnings don't belong in a published file, but some CLIs
+    (opencode) print --help there.
+    """
     try:
         proc = subprocess.run(
             [exe, flag], stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, timeout=timeout, check=False)
+            stderr=subprocess.PIPE, env=safe_env(), timeout=timeout, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return None
-    text = proc.stdout.decode("utf-8", "replace").strip()
+    text = (proc.stdout or proc.stderr).decode("utf-8", "replace").strip()
     return text if proc.returncode == 0 and text else None
 
 

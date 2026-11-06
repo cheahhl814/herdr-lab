@@ -1,7 +1,7 @@
 ---
 name: herdr-lab
 description: 'Router for the herdr-lab workflow family. Use when the user mentions Herdr, asks to delegate to another coding agent, run parallel agents / batches, run sudo or another privileged/secret-entry command safely in a managed pane, check another agent''s quota/usage, or brainstorm/debate with other agents (bidirectional critique rounds, devil''s advocate, second opinion). Also use to introduce or refresh a harness. Reads the intent and routes to the matching sub-skill: delegation/SKILL.md (herdr-lab-delegation), brainstorm/SKILL.md (herdr-lab-brainstorm), or induction/SKILL.md (herdr-lab-induction). Each sub-skill carries its own frontmatter and is independently symlinkable; docs-corpus and bin are shared at the herdr-lab root and reached via per-sub-skill relative symlinks.'
-version: 0.28.0
+version: 0.28.1
 updated: "2026-11-06"
 triggers:
   - user mentions Herdr by name
@@ -35,4 +35,4 @@ This file routes; it does not perform. The workflow is split into three independ
 
 ## Versioning
 
-The master router and all three sub-skills share one version number (currently 0.28.0). Bump all four together whenever the family changes, and keep `README.md` in sync with the same release.
+The master router and all three sub-skills share one version number (currently 0.28.1). Bump all four together whenever the family changes, and keep `README.md` in sync with the same release.

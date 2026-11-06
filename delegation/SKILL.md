@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.28.0
+version: 0.28.1
 updated: "2026-11-06"
 triggers:
   - user mentions Herdr by name
