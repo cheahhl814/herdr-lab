@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-delegation
 description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.28.3
+version: 0.28.4
 updated: "2026-11-06"
 triggers:
   - user mentions Herdr by name
@@ -148,7 +148,7 @@ Most harnesses block shell commands by default. Pass the flag via `herdr_agent s
 | copilot  | `--allow-all-tools` (paths/URLs still asked)               | `--allow-all` / `--yolo`                                                  | none — use `--allow-tool` granularly                                            |
 | agy      | none — single switch only                                  | `--dangerously-skip-permissions`                                          | none                                                                            |
 | pi       | none needed — no permission popups by design               | none needed                                                               | none                                                                            |
-| opencode | config-driven (`opencode.json` `permission`), no CLI flags | config-driven                                                             | config-driven                                                                   |
+| opencode | none in `--help` — config-driven (`opencode.json` `permission`) | `--auto` (auto-approves every permission not explicitly denied — dangerous!) | none in `--help` — config-driven |
 
 **Escalation ladder** (agent blocked on approval in-pane): read the pane to classify the prompt (§3) → single approval: send the confirmation key(s) → repeated approvals for the same action kind: pass the intermediate auto-approval flag on the **next** `herdr_agent start` (never change flags mid-session) → secret/credential prompt: never auto-answer, escalate to the user (§5).
 
@@ -239,6 +239,7 @@ Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recomme
 - Probes are harness-local. Never claim remaining headroom from a different harness's probe — and never sum a probe across harnesses.
 - If the probed headroom is thinner than the fleet for a hard-cap harness (`copilot`, `agy`): shrink the fleet, spread the seats onto another account/provider, or ask the user. Do not launch N seats into a wall and discover it as five simultaneous 429s.
 - Ollama local seats are VRAM-bound: N seats on one local model may serialize or OOM — treat local seats as serial unless the box has the headroom.
+- Ollama `:cloud` seats are plan-capped on concurrent requests to the hosted account: Pro and pay-as-you-go allow 3, Max/Team 8, and a free tier is reported as ~1. A `:cloud` fleet beyond the account's slot count serializes or rejects — cap `:cloud` seats at the plan limit and confirm the account's plan before sizing the fleet (caps per `docs-corpus/providers/ollama-online-docs/` and the account's own docs; third-party figures for free-tier slots conflict).
 - Costs: a T2 fleet is cost-insensitive by tier, but a *brainstorm* fleet spends the same budget while producing only a decision — keep brainstorm seats at T1/T3 unless the question is genuinely T2.
 
 ### 4.7.6 Ask-user gate (extended)

@@ -190,6 +190,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 
 ## Changelog
 
+### v0.28.4 (2026-11-06)
+
+**`opencode --auto` enters the permission tables; Ollama `:cloud` plan caps enter the budget check.** The §4.5 table and `docs-corpus/harnesses/permission-modes.md` now carry `--auto` as the only permission CLI flag opencode surfaces (verified against the regenerated 1.19.3 `--help` capture — the capture itself was unchanged, so no flag drift); everything else stays config-driven by `opencode.json` `permission`. §4.7.5 gained a bullet capping Ollama `:cloud` seats at the account's plan limit (Pro/pay-as-you-go 3 concurrent, Max/Team 8, free ~1 per third-party sources) so a `:cloud` fleet cannot be sized past the account's slots. The five `opencode` online-docs pages (agents, cli, config, models, permissions) were re-ingested from `opencode.ai/docs` via a herdr pane after the 2026-09-02 copies; the fresh `permission` page independently documents `--auto`.
+
 ### v0.28.3 (2026-11-06)
 
 **URL password redaction in induction captures now runs to the last `@`.** A password containing `@` or `/` previously left its tail exposed. Over-redaction is accepted as the safe direction. Multi-line `[env: ...]` values were reviewed and left as they are: harnesses only receive the allowlisted environment, so a secret can't appear in one. Found by automated security review.

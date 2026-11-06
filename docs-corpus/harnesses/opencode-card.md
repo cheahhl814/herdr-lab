@@ -16,7 +16,7 @@ Written by the herdr-lab induction sub-skill. `TODO` means not yet established.
 | Quota surface | TODO |
 | Login check | `opencode auth list` (read-only) |
 | Transcript reader (herdr-convo) | TODO (not tested) |
-| Online docs source | `opencode.ai/docs/<page>.md`; last ingested 2026-09-02, not refreshed by this run |
+| Online docs source | `opencode.ai/docs/<page>.md`; last ingested 2026-11-06 (agents, cli, config, models, permissions — refreshed from the 2026-09-02 copies) |
 
 ## Live-test notes
 

@@ -15,7 +15,7 @@
 | copilot | `--allow-all` (= allow-all-tools + paths + urls) | `--allow-all-tools` (paths/urls still asked) | — | granular: `--allow-tool`, `--allow-all-paths`, `--allow-all-urls`, `--add-dir` |
 | agy | `--dangerously-skip-permissions` | — | — | single switch, auto-approves all tool requests |
 | pi | none needed | none needed | — | no permission popups by design; executes directly; `--approve`/`-a` trusts project-local files |
-| opencode | none surfaced in `--help` | none surfaced in `--help` | — | permissions are config-driven (`opencode.json` `permission` settings), not CLI flags |
+| opencode | `--auto` (auto-approves every permission not explicitly denied — dangerous!) | none in `--help` | — | permissions are primarily config-driven (`opencode.json` `permission` settings); `--auto` verified against help-opencode.md (opencode 1.19.3) is the only permission CLI flag it surfaces |
 
 ## Guidance
 
@@ -27,8 +27,10 @@
 - **Trust-dialog interaction still applies**: even with auto-approval flags, first run
   in a new folder can show the workspace trust dialog (see SKILL.md §3) — that dialog
   is outside the permission-mode system.
-- **opencode exception**: if opencode blocks on permissions, fix it via its config file,
-  not CLI flags. Ask the user before editing permission config.
+- **opencode exception**: if opencode blocks on permissions, fix it via its config file
+  (`opencode.json` `permission` settings) as the default — its only permission CLI flag
+  is the full-auto `--auto`, which stays under the yolo rules above (explicit unattended
+  intent only). Ask the user before editing permission config.
 
 ## Escalation ladder (when an agent is blocked on approval in-pane)
 
