@@ -66,7 +66,7 @@ env | grep -E '^(HC_TERMINAL_(SOCKET|ID)|HERDR_ENV|HERDR_PANE_ID)='
    - Name = `<task-slug>-<harness>` (ledger join key, as in the CLI edition).
    - Always `--bg`; without it the agent's whole screen streams into your output.
    - The first task goes **in `run`**. A `send` to a booting agent can be dropped. For a plain launch: `hc run --bg --name x <agent>`, then `hc wait x`, then `hc send x "<task>"`.
-   - Check `first_message.sent` in the reply. If false, the task was **not** delivered: `hc get <t>`, `hc read <t>`, clear any dialog, then send. Do not blindly resend.
+   - For **template** launches, check `first_message.sent` in the reply (a plain `hc run --bg <agent> "<task>"` has no `first_message`: the text is the agent's own start argument, and the seat's `hc get` shows `status` instead). If false, the task was **not** delivered: `hc get <t>`, `hc read <t>`, clear any dialog, then send. Do not blindly resend.
    - Never `-p` / `--print` / `exec` / piped modes (same absolute ban as delegation §1). Codex must run with `--no-daemon`, including in templates, or its commands escape hc.
    - Do not let children start more agents unless you assigned that.
 4. **Batch = launch all, then wait once.** Start every seat before waiting: `hc wait --children all` (or `any` to service each as it finishes). `reason: message` means a report is coming as your next input (not something to `read`); `reason: timeout` (180 s) is a check-in, wait again.
@@ -103,7 +103,7 @@ Same rules as delegation §5: never send, pipe, or paste a secret; never run it 
 3. `hc wait priv` for exit (race-free), then `hc read priv`. Use `--output X` only when the wait starts before X can print: it matches output printed **after** the wait begins.
 4. Keep it until follow-ups are done (sudo caching is per tty), then `hc kill`/`hc rm`.
 
-*Status: composed from the manuals and a live probe of `run`/`wait`/`read`/`get`/`rm` (2026-11-09). The password-entry flow itself was not live-tested.*
+*Status: live-tested 2026-11-09 (hc 0.1.18): a hidden claude seat via `hc run --bg --name … --cwd <scratch> claude "<task>"` reached `status: done`, `hc read` showed the exact completion signal, `kill` + `rm` removed it; `wait --output X` times out when X printed before the wait began and returns `reason: output` when the wait started first. The password-entry flow itself was not live-tested.*
 
 ## §4 Ledger
 
