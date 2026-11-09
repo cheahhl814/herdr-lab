@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-desktop
 description: herdr-lab desktop edition — delegate to other coding agents, run parallel batches, wait on results, run sudo/secret-entry commands, and arrange the person's window, using the Herdr desktop app (herdr-app + herdr-core `hc`) instead of the old `herdr` TUI CLI. Use when `HC_TERMINAL_SOCKET` / `HC_TERMINAL_ID` is set, `hc` and `herdr-app` are on PATH, or the user says "Herdr desktop/app/hc". Carries the CLI-to-desktop command map, hc delegation sequence, verification and recovery table, sudo pattern, and ledger mapping. Do not use inside the old CLI (HERDR_ENV=1, HERDR_PANE_ID set) — that is herdr-lab-delegation.
-version: 0.29.0
+version: 0.29.1
 updated: "2026-11-09"
 triggers:
   - user mentions Herdr desktop, herdr-app, herdr-core or hc

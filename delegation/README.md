@@ -1,6 +1,6 @@
 # herdr-lab-delegation
 
-**Skill name**: `herdr-lab-delegation` · **Version**: 0.29.0 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-delegation` · **Version**: 0.29.1 · **Type**: agent skill (workflow-only)
 
 The delegation core of the [herdr-lab](https://github.com/cheahhl814/herdr-lab) family: delegate a task to another coding agent through [herdr](https://github.com/ogulcancelik/herdr) panes, run parallel batches, verify completion, recover stalls, and pick the fleet (how many harnesses, which harness, which model) before any of it starts.
 

@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-delegation
-description: herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.29.0
+description: Old herdr TUI CLI edition only (for the Herdr desktop app use herdr-lab-desktop). herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
+version: 0.29.1
 updated: "2026-11-09"
 triggers:
   - user mentions Herdr by name
@@ -15,6 +15,8 @@ requires:
   - HERDR_ENV=1
   - docs-corpus/ present (reached via the docs-corpus symlink sibling of this file, or alongside the herdr-lab router)
 ---
+
+> **Edition guard.** This sub-skill is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: stop and use `desktop/SKILL.md` (`herdr-lab-desktop`) instead; never issue `herdr agent/pane/workspace ...` there.
 
 
 Herdr tools are opt-in: only use them when the user explicitly invokes this workflow (see triggers above). Tool descriptions define WHAT each action does and its parameters — this file only orders calls, defines checkpoints, and lists recovery paths.

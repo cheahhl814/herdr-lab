@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-brainstorm
-description: 'herdr-lab brainstorming mode — bidirectional multi-agent critique rounds over herdr panes, not a one-shot opinion poll. R0 independent draft (orchestrator writes its own first, anti-anchoring), R1 anonymized cross-critique relay (positions shuffled, verbatim seat-written fields, no tallies), R2 decision round only if disagreement remains (rank / vote / evidence-check by sub-mode), synthesis with a Dissent section. Anti-sycophancy countermeasures built in (seat isolation, RELAY FIDELITY self-check, CHANGED: yes must cite a named verified argument, orchestrator never votes). Use when the user wants to brainstorm, debate, cross-examine / stress-test a design, get a devil''s advocate or a second opinion with critique, or have agents argue it out and converge. References herdr-lab-delegation''s sections (§N) for topology, verification, recovery, ledger, and task-tier seating.'
-version: 0.29.0
+description: 'Old herdr TUI CLI edition only (for the Herdr desktop app use herdr-lab-desktop). herdr-lab brainstorming mode — bidirectional multi-agent critique rounds over herdr panes, not a one-shot opinion poll. R0 independent draft (orchestrator writes its own first, anti-anchoring), R1 anonymized cross-critique relay (positions shuffled, verbatim seat-written fields, no tallies), R2 decision round only if disagreement remains (rank / vote / evidence-check by sub-mode), synthesis with a Dissent section. Anti-sycophancy countermeasures built in (seat isolation, RELAY FIDELITY self-check, CHANGED: yes must cite a named verified argument, orchestrator never votes). Use when the user wants to brainstorm, debate, cross-examine / stress-test a design, get a devil''s advocate or a second opinion with critique, or have agents argue it out and converge. References herdr-lab-delegation''s sections (§N) for topology, verification, recovery, ledger, and task-tier seating.'
+version: 0.29.1
 updated: "2026-11-09"
 triggers:
   - brainstorm / debate / get a second opinion *with critique* together with other agents (bidirectional critique rounds, not a one-shot opinion poll)
@@ -13,6 +13,8 @@ triggers:
 requires:
   - herdr-lab-delegation conventions available (reads its §1-§5 for topology, verification, recovery, ledger, seat tiers)
 ---
+
+> **Edition guard.** This sub-skill is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: stop and use `desktop/SKILL.md` (`herdr-lab-desktop`) instead; never issue `herdr agent/pane/workspace ...` there.
 
 # herdr-lab brainstorming (herdr-lab workflow §6)
 

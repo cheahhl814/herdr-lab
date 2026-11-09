@@ -1,6 +1,6 @@
 # herdr-lab-desktop-mods
 
-**Skill name**: `herdr-lab-desktop-mods` · **Version**: 0.29.0 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-desktop-mods` · **Version**: 0.29.1 · **Type**: agent skill (workflow-only)
 
 Customize the Herdr desktop app by editing files under `~/.config/herdr-app`: write or clone mods and layouts, install community ones, verify with `check` → `status` → `shot`, and port CLI plugin ideas such as usage meters.
 

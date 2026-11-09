@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.29.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.29.1-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.29.0** (updated 2026-11-09). The workflow is split into a router master + five independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
+> Current version: **v0.29.1** (updated 2026-11-09). The workflow is split into a router master + five independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
 
 ## Contents
 
@@ -217,6 +217,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.29.1 (2026-11-09)
+
+**Edition guard on the CLI sub-skills.** `delegation`, `brainstorm` and `induction` now open with a guard (`HC_TERMINAL_ID` set and `HERDR_PANE_ID` unset means desktop: use `desktop/SKILL.md`), and their descriptions start with "Old herdr TUI CLI edition only". A harness that loads a sub-skill directly, bypassing the router, is now redirected instead of issuing `herdr` commands the desktop does not have.
 
 ### v0.29.0 (2026-11-09)
 

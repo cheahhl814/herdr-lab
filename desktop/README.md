@@ -1,6 +1,6 @@
 # herdr-lab-desktop
 
-**Skill name**: `herdr-lab-desktop` · **Version**: 0.29.0 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-desktop` · **Version**: 0.29.1 · **Type**: agent skill (workflow-only)
 
 Delegation, parallel batches, waiting, recovery and sudo/secret entry for the Herdr desktop app, using `hc` to run agents and `herdr-app` to arrange the window. Includes the old-CLI-to-desktop command map and how brainstorm and induction transport onto `hc`.
 

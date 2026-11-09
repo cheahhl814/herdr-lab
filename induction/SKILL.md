@@ -1,7 +1,7 @@
 ---
 name: herdr-lab-induction
-description: herdr-lab harness induction — introduce the primary harness to an installed secondary harness, or refresh one already known. Captures --help and the version (bin/herdr-induct.py), ingests official docs into docs-corpus/ with the optional docs-ingest skill, fills a harness card (flags, quota surface, login check), then proves the harness works with one live interactive herdr seat. Use when the user wants to add, introduce, onboard, or induct a new harness or coding agent, or refresh, re-capture, or update the docs for one. Writes to the repo working tree for review; never commits, installs a harness, or changes credentials or routing. References herdr-lab-delegation sections (§N) for the seat itself.
-version: 0.29.0
+description: Old herdr TUI CLI edition only (for the Herdr desktop app use herdr-lab-desktop). herdr-lab harness induction — introduce the primary harness to an installed secondary harness, or refresh one already known. Captures --help and the version (bin/herdr-induct.py), ingests official docs into docs-corpus/ with the optional docs-ingest skill, fills a harness card (flags, quota surface, login check), then proves the harness works with one live interactive herdr seat. Use when the user wants to add, introduce, onboard, or induct a new harness or coding agent, or refresh, re-capture, or update the docs for one. Writes to the repo working tree for review; never commits, installs a harness, or changes credentials or routing. References herdr-lab-delegation sections (§N) for the seat itself.
+version: 0.29.1
 updated: "2026-11-09"
 triggers:
   - introduce / onboard / induct a new harness or coding agent to herdr-lab
@@ -14,6 +14,8 @@ requires:
   - HERDR_ENV=1
   - docs-ingest skill (optional; without it, capture --help only)
 ---
+
+> **Edition guard.** This sub-skill is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: stop and use `desktop/SKILL.md` (`herdr-lab-desktop`) instead; never issue `herdr agent/pane/workspace ...` there.
 
 # herdr-lab harness induction
 
