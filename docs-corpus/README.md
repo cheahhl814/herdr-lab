@@ -6,6 +6,7 @@ hallucinating them. Regenerate captures rather than hand-editing them.
 Two provenance tiers per file:
 - **Source 1 — verbatim CLI captures** (`help-*.md`, `status.md`): authoritative for the pinned installed version. Note: absolute `$HOME` paths that leaked the local username in two captures (`help-root.md`, `status.md`) were genericized to `$HOME/...` on 2026-09-02 for public publish — otherwise verbatim.
 - **Source 2 — online docs** (`*-online-docs/`, `online-docs-*/`, upstream repo copies): richer context (concepts, config files, quotas, permission semantics) ingested via docs-ingest from official sites/repos; may be newer or older than the installed binary.
+- **Desktop tier** (`herdr-desktop/`): same two tiers for the Herdr desktop app. Source 1 = `hc`/`herdr-app` `--help`, `--skill`, `commands`, `status`, plus the installed `~/.config/herdr-app/AGENTS.md` and `herdr.d.ts` (captured 2026-11-09 from herdr-app 0.1.13 / hc 0.1.18; `$HOME` genericized). Source 2 = `herdrdev/herdr-app` and `herdrdev/herdr-core` (`master`) README, AGENTS, CHANGELOG, `docs/*.md`, `herdr-core` shipped SKILL, and text extracted from herdr.dev/guide and /core. The 789 KB `gpui-kit.d.ts` is deliberately not copied; read it live beside `AGENTS.md`.
 - **Source 3 — community marketplace** (`herdr/related-plugins.md`): self-tagged, unreviewed third-party plugins from herdr.dev/plugins/. Candidates only — never installed automatically, evaluate before use.
 
 ## Layout
@@ -25,6 +26,11 @@ docs-corpus/
 │   ├── plugin-README.md, plugin-index.ts   pi-herdr plugin (tool-level docs + source)
 │   └── related-plugins.md  CURATED, source 3: community-marketplace plugin candidates
 │                           for §2-§4 gaps (quota API, transcript normalization, dispatch)
+├── herdr-desktop/          Herdr desktop app (herdr-app + herdr-core `hc`) — not the old CLI
+│   ├── help-hc.md, help-herdr-app.md, hc-skill.md, herdr-app-skill.md,
+│   │   herdr-app-commands.md, status.md   verbatim captures (source 1)
+│   ├── installed-AGENTS.md, herdr.d.ts    the app's own interface guide and API types
+│   └── online-docs/{app,core,herdr.dev}/  upstream repo docs (source 2)
 └── harnesses/              supported coding-agent CLIs installed on this machine
     ├── permission-modes.md         CURATED summary: auto-approval/yolo flags per harness
     ├── herdr-supported-kinds.txt   verbatim `herdr agent start --help` kind list

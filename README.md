@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.28.3-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.29.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.28.3** (updated 2026-11-06). The workflow is split into a router master + three independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, and `herdr-lab-induction`. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
+> Current version: **v0.29.0** (updated 2026-11-09). The workflow is split into a router master + five independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
 
 ## Contents
 
@@ -28,6 +28,20 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 The official herdr skill ships `herdr_layout` / `herdr_pane` / `herdr_agent` tools and their parameter schemas. This skill **does not redefine those tools** — it defines the workflow around them: when to split a pane, when to delegate to another agent, how to gate a prompt on completion, how to recover from stalls, and — since v0.15.0 — how to run a bidirectional multi-agent brainstorm (critique rounds, not a one-shot opinion poll).
 
 If you are looking for the tool API, read `docs-corpus/herdr/` (offline captures of the herdr CLI flags and supported agents). If you are looking for *workflow* (the order in which to call those tools, the checkpoints, the failure recoveries), read `SKILL.md`.
+
+## Two editions
+
+Herdr now exists as two unrelated programs that can be installed side by side. They share only the folder `~/.config/herdr`, not sockets, plugins or commands.
+
+| | Old CLI edition | Desktop edition |
+|:--|:--|:--|
+| Programs | `herdr` (TUI) with the pi-herdr plugin | `herdr-app` (window) + `herdr-core` (`hc`) |
+| Shell marker | `HERDR_ENV=1`, `HERDR_PANE_ID` | `HC_TERMINAL_SOCKET`, `HC_TERMINAL_ID` |
+| Sub-skills | `delegation`, `brainstorm`, `induction` | `desktop`, `desktop-mods` (brainstorm and induction reuse `desktop` §5 for transport) |
+| Extensions | plugins in `~/.config/herdr/plugins` | mods and layouts in `~/.config/herdr-app` |
+| Docs-corpus | `docs-corpus/herdr/` | `docs-corpus/herdr-desktop/` |
+
+The router checks the environment first and never mixes the two command sets. As of 2026-11-09 the desktop has no shipped equivalent of the usagebar / agent-quota meters; `desktop-mods` explains how to port one.
 
 ## Installation
 
@@ -57,23 +71,27 @@ ln -sf "$(pwd)/herdr-lab" ~/.pi/agent/skills/herdr-lab
 # directory a skill is discovered under and the skill it declares agree:
 ln -sf "$(pwd)/herdr-lab/delegation" ~/.pi/agent/skills/herdr-lab-delegation
 ln -sf "$(pwd)/herdr-lab/brainstorm" ~/.pi/agent/skills/herdr-lab-brainstorm
+ln -sf "$(pwd)/herdr-lab/desktop" ~/.pi/agent/skills/herdr-lab-desktop
+ln -sf "$(pwd)/herdr-lab/desktop-mods" ~/.pi/agent/skills/herdr-lab-desktop-mods
 ```
 
 > [!TIP]
-> If your harness reads `~/.agents/skills/` instead of `~/.pi/agent/skills/`, symlink into that directory instead — same three links, same names. Both the router (`herdr-lab`) and the two sub-skills (`herdr-lab-delegation`, `herdr-lab-brainstorm`) are then discovered independently, and each sub-skill's `docs-corpus` / `bin` symlinks still resolve.
+> If your harness reads `~/.agents/skills/` instead of `~/.pi/agent/skills/`, symlink into that directory instead — same links, same names. Both the router (`herdr-lab`) and the five sub-skills (`herdr-lab-delegation`, `herdr-lab-brainstorm`, `herdr-lab-induction`, `herdr-lab-desktop`, `herdr-lab-desktop-mods`) are then discovered independently, and each sub-skill's `docs-corpus` / `bin` symlinks still resolve.
 
 The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/herdr-batch.py`, the §1.6 batch ledger) is stdlib-only.
 
 ## Workflow phases
 
-The skill is a **router master + three sub-skills**. `SKILL.md` routes; the sub-skills do the work. Each sub-skill has its own frontmatter (name, description, version, triggers) and can be symlinked as a standalone skill.
+The skill is a **router master + five sub-skills** (three for the old `herdr` CLI edition, two for the desktop edition). `SKILL.md` routes; the sub-skills do the work. Each sub-skill has its own frontmatter (name, description, version, triggers) and can be symlinked as a standalone skill.
 
 | Path | Skill name | When it is read |
 |:-----|:-----------|:----------------|
-| `SKILL.md` | `herdr-lab` | Router: detects intent (delegation vs brainstorming) and routes; fires on bare "use herdr" |
+| `SKILL.md` | `herdr-lab` | Router: detects the edition (old CLI vs desktop) and the intent, then routes; fires on bare "use herdr" |
 | `delegation/SKILL.md` | `herdr-lab-delegation` | "delegate to claude / codex / opencode / …", "run agents in parallel" — §1 sequence + worktree merge-back + §1.6 batch ledger, §2 verification, §3 recovery, §4/§4.5/§4.6 launch config + tiers, §4.7 fleet composition, §5 sudo pattern |
 | `brainstorm/SKILL.md` | `herdr-lab-brainstorm` | "brainstorm with another agent", "debate these two designs", "devil's advocate", "have the agents argue it out and converge" — R0 draft → R1 anonymized cross-critique → R2 decision round → synthesis + Dissent |
 | `induction/SKILL.md` | `herdr-lab-induction` | "introduce this harness", "refresh the docs-corpus for codex" — capture, optional docs ingest, harness card, one live seat |
+| `desktop/SKILL.md` | `herdr-lab-desktop` | delegate / parallel batch / sudo in the **Herdr desktop app** — `hc` + `herdr-app`, command map from the old CLI |
+| `desktop-mods/SKILL.md` | `herdr-lab-desktop-mods` | customize the desktop window — clone/write mods and layouts, install community ones, port usage meters |
 
 `delegation/SKILL.md` and `brainstorm/SKILL.md` are the same §1-§5 / §6 content that previously lived in the single SKILL.md, with brainstorm's §-references rewritten to "delegation §N" so they resolve in the split files.
 
@@ -135,7 +153,7 @@ The brainstorm trigger family (added in v0.15.0/v0.15.1) routes to the bidirecti
 
 ```text
 herdr-lab/
-├── SKILL.md                 # Router master: routes to the two sub-skills below
+├── SKILL.md                 # Router master: picks the edition (old CLI vs desktop), then routes to a sub-skill
 ├── delegation/
 │   ├── SKILL.md             # herdr-lab-delegation: §1-§5 + §4.7 fleet composition (independently symlinkable)
 │   ├── README.md            # sub-skill README (public face)
@@ -144,6 +162,16 @@ herdr-lab/
 ├── brainstorm/
 │   ├── SKILL.md             # herdr-lab-brainstorm: bidirectional critique rounds (independently symlinkable)
 │   ├── README.md            # sub-skill README (public face)
+│   ├── docs-corpus -> ../docs-corpus
+│   └── bin -> ../bin
+├── desktop/
+│   ├── SKILL.md             # herdr-lab-desktop: hc + herdr-app delegation (independently symlinkable)
+│   ├── README.md
+│   ├── docs-corpus -> ../docs-corpus
+│   └── bin -> ../bin
+├── desktop-mods/
+│   ├── SKILL.md             # herdr-lab-desktop-mods: mods, layouts, keys for herdr-app
+│   ├── README.md
 │   ├── docs-corpus -> ../docs-corpus
 │   └── bin -> ../bin
 ├── induction/
@@ -189,6 +217,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.29.0 (2026-11-09)
+
+**Herdr desktop edition.** Two new sub-skills sit beside the CLI ones, which are unchanged. `desktop/` (`herdr-lab-desktop`) covers delegation, batches, waiting, recovery and sudo with `hc` + `herdr-app`, with a CLI-to-desktop command map and a ledger mapping. `desktop-mods/` (`herdr-lab-desktop-mods`) covers cloning and writing mods and layouts, the `check` → `status` → `shot` loop, installing community mods, and porting usagebar-style meters (no shipped desktop mod provides them as of 2026-11-09). The router gains an edition check (rule 10). `docs-corpus/herdr-desktop/` holds the `hc`/`herdr-app` captures, the installed `AGENTS.md` and `herdr.d.ts`, and the `herdrdev/herdr-app` and `herdrdev/herdr-core` docs. The desktop and old CLI do not share sockets, plugins or commands; the desktop does not load `~/.config/herdr/plugins`. The password-entry flow in `desktop/` §3 is composed from the manuals and not live-tested.
 
 ### v0.28.4 (2026-11-06)
 

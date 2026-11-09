@@ -6,29 +6,27 @@
 
 GitHub Copilot CLI is GitHub's AI coding agent for the terminal. It can understand your codebase, make edits, run commands, and help you build software faster.
 
-Open models can be used with Copilot CLI through Ollama, enabling you to use models such as `qwen3.5`, `glm-5.1:cloud`, `kimi-k2.5:cloud`.
+Open models can be used with Copilot CLI through Ollama, enabling you to use models such as `qwen3.5`, `glm-5.3:cloud`, `kimi-k3:cloud` See all supported models [here](https://ollama.com/search).
 
 ## Install
 
 Install [Copilot CLI](https://github.com/features/copilot/cli/):
 
-<CodeGroup>
-  ```shell macOS / Linux (Homebrew) theme={"system"}
-  brew install copilot-cli
-  ```
+```shell macOS / Linux (Homebrew) theme={"system"}
+brew install copilot-cli
+```
 
-  ```shell npm (all platforms) theme={"system"}
-  npm install -g @github/copilot
-  ```
+```shell npm (all platforms) theme={"system"}
+npm install -g @github/copilot
+```
 
-  ```shell macOS / Linux (script) theme={"system"}
-  curl -fsSL https://gh.io/copilot-install | bash
-  ```
+```shell macOS / Linux (script) theme={"system"}
+curl -fsSL https://gh.io/copilot-install | bash
+```
 
-  ```powershell Windows (WinGet) theme={"system"}
-  winget install GitHub.Copilot
-  ```
-</CodeGroup>
+```powershell Windows (WinGet) theme={"system"}
+winget install GitHub.Copilot
+```
 
 ## Usage with Ollama
 
@@ -43,17 +41,6 @@ ollama launch copilot
 ```shell theme={"system"}
 ollama launch copilot --model kimi-k2.5:cloud
 ```
-
-## Recommended Models
-
-* `kimi-k2.5:cloud`
-* `glm-5:cloud`
-* `minimax-m2.7:cloud`
-* `qwen3.5:cloud`
-* `glm-4.7-flash`
-* `qwen3.5`
-
-Cloud models are also available at [ollama.com/search?c=cloud](https://ollama.com/search?c=cloud).
 
 ## Non-interactive (headless) mode
 
@@ -90,4 +77,4 @@ Or run with environment variables inline:
 COPILOT_PROVIDER_BASE_URL=http://localhost:11434/v1 COPILOT_PROVIDER_API_KEY= COPILOT_PROVIDER_WIRE_API=responses COPILOT_MODEL=glm-5:cloud copilot
 ```
 
-**Note:** Copilot requires a large context window. We recommend at least 64k tokens. See the [context length documentation](/context-length) for how to adjust context length in Ollama.
+**Note:** Copilot requires a large context window. We recommend at least 64k tokens. See the [context length documentation](https://docs.ollama.com/context-length.md) for how to adjust context length in Ollama.

@@ -1,6 +1,6 @@
 # herdr-lab-induction
 
-**Skill name**: `herdr-lab-induction` · **Version**: 0.28.3 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-induction` · **Version**: 0.29.0 · **Type**: agent skill (workflow-only)
 
 The onboarding step of the [herdr-lab](https://github.com/cheahhl814/herdr-lab) family: introduces the primary harness to an installed secondary harness, then proves the harness works. Running it again on a known harness refreshes its corpus entry.
 

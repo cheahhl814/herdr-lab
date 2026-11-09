@@ -4,54 +4,36 @@
 
 # Ollama documentation
 
-Start building with open models.
+Use open models in your desktop apps and coding agents, or build them into your application.
 
-Follow the [quickstart](/quickstart), then choose a model, integration, or API.
+> [card] [Use your apps](https://docs.ollama.com/quickstart.md#get-started)
+>
+> Connect Claude or ChatGPT on your desktop, or launch a coding agent from your terminal.
 
-## Models
+> [card] [Build an application](https://docs.ollama.com/quickstart.md#build-an-application)
+>
+> Call cloud models with Ollama, OpenAI, or Anthropic APIs.
 
-Run models locally or use larger models in Ollama's cloud.
+## Explore models
 
-<CardGroup cols={2}>
-  <Card title="Browse models" icon="star" href="https://ollama.com/search">
-    Find models for chat, coding, vision, embeddings, and reasoning.
-  </Card>
+Choose cloud models or run models on your computer.
 
-  <Card title="Cloud models" icon="cloud" href="/cloud">
-    Run larger models on Ollama's Cloud without the download.
-  </Card>
-</CardGroup>
+> [card] [Cloud models](https://docs.ollama.com/cloud.md)
+>
+> Run models without a local GPU.
 
-## Next steps
+> [card] [Local models](https://docs.ollama.com/quickstart.md#run-a-model-locally)
+>
+> Download Ollama and run a model on your computer.
 
-Connect Ollama to an app, or build with the API.
+Browse the [model library](https://ollama.com/search) for coding, vision, embeddings, and reasoning models.
 
-<CardGroup cols={2}>
-  <Card title="Integrations" icon="plug" href="/integrations">
-    Connect Ollama to an app, editor, or agent.
-  </Card>
+## Documentation
 
-  <Card title="First API request" icon="code" href="/api/introduction">
-    Learn the local and cloud base URLs, then send a request with `curl`.
-  </Card>
-
-  <Card title="Python library" icon="python" href="https://github.com/ollama/ollama-python">
-    Use Ollama from Python.
-  </Card>
-
-  <Card title="JavaScript library" icon="js" href="https://github.com/ollama/ollama-js">
-    Use Ollama from JavaScript or TypeScript.
-  </Card>
-</CardGroup>
+* [Integrations](https://docs.ollama.com/integrations.md) — connect an app, editor, or agent.
+* [API reference](https://docs.ollama.com/api/introduction.md) — use Ollama's API or compatible OpenAI and Anthropic clients.
+* [Python library](https://github.com/ollama/ollama-python) and [JavaScript library](https://github.com/ollama/ollama-js) — use Ollama from your application.
 
 ## Community
 
-<CardGroup cols={2}>
-  <Card title="Discord" icon="discord" href="https://discord.gg/ollama">
-    Join the Ollama Discord.
-  </Card>
-
-  <Card title="Reddit" icon="reddit" href="https://reddit.com/r/ollama">
-    Join the Ollama subreddit.
-  </Card>
-</CardGroup>
+Join the conversation on [Discord](https://discord.gg/ollama) or [Reddit](https://reddit.com/r/ollama).

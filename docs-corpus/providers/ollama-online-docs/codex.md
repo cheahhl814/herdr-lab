@@ -6,7 +6,7 @@
 
 ## Install
 
-Install the [Codex CLI](https://developers.openai.com/codex/cli/). For the desktop app, see [Codex App](/integrations/codex-app).
+Install the [Codex CLI](https://developers.openai.com/codex/cli/). For the ChatGPT desktop app, see [ChatGPT Desktop](https://docs.ollama.com/integrations/chatgpt.md).
 
 ```
 npm install -g @openai/codex
@@ -14,7 +14,9 @@ npm install -g @openai/codex
 
 ## Usage with Ollama
 
-<Note>Codex requires a larger context window. It is recommended to use a context window of at least 64k tokens.</Note>
+> [!NOTE]
+>
+> Use a context window of at least 64k tokens for Codex.
 
 ### Quick setup
 
@@ -24,6 +26,11 @@ ollama launch codex
 
 When launched through `ollama launch codex`, Ollama refreshes the model catalog
 and uses a dedicated Codex profile for that session.
+
+Type `/model` inside Codex to switch between your installed, tool-capable Ollama
+models without restarting. The starting model remains selected, and each model
+keeps its own context window, vision, and thinking settings. Pull additional
+models with `ollama pull <model>` before launching to include them in the picker.
 
 To configure without launching:
 
@@ -78,7 +85,7 @@ Then run:
 codex --profile ollama-launch
 ```
 
-## Web search
+## Web search through local Ollama
 
 Codex web-search requests sent through the Ollama profile are executed by
 Ollama for both local and cloud models. Sign in with `ollama signin` to use the

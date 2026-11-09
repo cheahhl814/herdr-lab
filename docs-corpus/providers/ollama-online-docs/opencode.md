@@ -18,107 +18,47 @@ ollama launch opencode
 
 ## Capabilities
 
-<div className="capability-list capability-list-full">
-  <div className="capability-list-grid">
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="comment" />
-      </div>
+ChatAsk questions about a repository or task
 
-      <div>
-        <div className="capability-list-heading">Chat</div>
-        <div className="capability-list-copy">Ask questions about a repository or task</div>
-      </div>
-    </div>
+Command lineRun commands from your working directory
 
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="terminal" />
-      </div>
+File editsRead and edit files in your project
 
-      <div>
-        <div className="capability-list-heading">Command line</div>
-        <div className="capability-list-copy">Run commands from your working directory</div>
-      </div>
-    </div>
+SubagentsSplit work across tasks
 
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="code" />
-      </div>
+Web fetchFetch and summarize web pages
 
-      <div>
-        <div className="capability-list-heading">File edits</div>
-        <div className="capability-list-copy">Read and edit files in your project</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="users" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Subagents</div>
-        <div className="capability-list-copy">Split work across tasks</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="file-text" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Web fetch</div>
-        <div className="capability-list-copy">Fetch and summarize web pages</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="image" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Vision</div>
-        <div className="capability-list-copy">Send images and screenshots</div>
-      </div>
-    </div>
-  </div>
-</div>
+VisionSend images and screenshots
 
 ## Models
 
 Choose a model with enough context for your repository.
 
-<CardGroup cols={2}>
-  <Card title="Cloud models" icon="cloud" href="https://ollama.com/search?c=cloud">
-    Use larger models without downloading them.
-  </Card>
+> [card] [Cloud models](https://ollama.com/search?c=cloud)
+>
+> Use larger models without downloading them.
 
-  <Card title="Local models" icon="hard-drive" href="https://ollama.com/search?c=tools">
-    Choose a model and set a 64k+ context window.
-  </Card>
-</CardGroup>
+> [card] [Local models](https://ollama.com/search?c=tools)
+>
+> Choose a model and set a 64k+ context window.
 
-<Note>OpenCode requires a context length of 64k or higher. See [Context length](/context-length) for more information.</Note>
+> [!NOTE]
+>
+> OpenCode requires a context length of 64k or higher. See [Context length](https://docs.ollama.com/context-length.md) for more information.
 
 ## Manual setup
 
-<p className="manual-step-title">1. Install OpenCode</p>
+1\. Install OpenCode
 
-<CodeGroup>
-  ```shell macOS / Linux theme={"system"}
-  curl -fsSL https://opencode.ai/install | bash
-  ```
+```shell macOS / Linux theme={"system"}
+curl -fsSL https://opencode.ai/install | bash
+```
 
-  ```powershell Windows theme={"system"}
-  npm install -g opencode-ai
-  ```
-</CodeGroup>
+```powershell Windows theme={"system"}
+npm install -g opencode-ai
+```
 
-<p className="manual-step-title">2. Configure Ollama as a provider</p>
+2\. Configure Ollama as a provider
 
 Add an Ollama provider to `opencode.json`:
 
@@ -142,7 +82,7 @@ Add an Ollama provider to `opencode.json`:
 }
 ```
 
-<p className="manual-step-title">3. Run OpenCode</p>
+3\. Run OpenCode
 
 ```shell theme={"system"}
 opencode

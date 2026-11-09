@@ -4,7 +4,7 @@
 
 # Claude Code
 
-[Claude Code](https://code.claude.com/docs/en/overview) is an agentic coding tool that reads your codebase, edits files, and runs commands.
+[Claude Code](https://code.claude.com/docs/en/overview) reads your codebase, edits files, and runs commands.
 
 Ollama connects Claude Code to local and cloud models through its Anthropic-compatible API.
 
@@ -18,124 +18,39 @@ ollama launch claude
 
 ## Capabilities
 
-<div className="capability-list capability-list-full">
-  <div className="capability-list-grid">
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="comment" />
-      </div>
+ChatAsk questions about a repository or task
 
-      <div>
-        <div className="capability-list-heading">Chat</div>
-        <div className="capability-list-copy">Ask questions about a repository or task</div>
-      </div>
-    </div>
+Command lineRun commands with Claude Code's permission flow
 
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="terminal" />
-      </div>
+Tool callingUse tools with compatible models
 
-      <div>
-        <div className="capability-list-heading">Command line</div>
-        <div className="capability-list-copy">Run commands with Claude Code's permission flow</div>
-      </div>
-    </div>
+File editsRead and edit files in your project
 
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="code" />
-      </div>
+SubagentsSplit work across tasks
 
-      <div>
-        <div className="capability-list-heading">Tool calling</div>
-        <div className="capability-list-copy">Use tools with compatible models</div>
-      </div>
-    </div>
+Web searchSearch the web through Ollama
 
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="file-pen" />
-      </div>
+Web fetchFetch and summarize web pages
 
-      <div>
-        <div className="capability-list-heading">File edits</div>
-        <div className="capability-list-copy">Read and edit files in your project</div>
-      </div>
-    </div>
+VisionSend images and screenshots
 
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="users" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Subagents</div>
-        <div className="capability-list-copy">Split work across tasks</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="globe" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Web search</div>
-        <div className="capability-list-copy">Search the web through Ollama</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="file-text" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Web fetch</div>
-        <div className="capability-list-copy">Fetch and summarize web pages</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="image" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Vision</div>
-        <div className="capability-list-copy">Send images and screenshots</div>
-      </div>
-    </div>
-
-    <div className="capability-list-item">
-      <div className="capability-list-icon">
-        <Icon icon="brain" />
-      </div>
-
-      <div>
-        <div className="capability-list-heading">Thinking</div>
-        <div className="capability-list-copy">Use thinking controls with compatible models</div>
-      </div>
-    </div>
-  </div>
-</div>
+ThinkingUse thinking controls with compatible models
 
 ## Models
 
 Choose a model with enough context for your repository.
 
-<CardGroup cols={2}>
-  <Card title="Cloud models" icon="cloud" href="https://ollama.com/search?c=cloud">
-    Use larger models without downloading them.
-  </Card>
+> [card] [Cloud models](https://ollama.com/search?c=cloud)
+>
+> Use larger models without downloading them.
 
-  <Card title="Local models" icon="hard-drive" href="https://ollama.com/search?c=tools">
-    Choose a model and set a 64k+ context window.
-  </Card>
-</CardGroup>
+> [card] [Local models](https://ollama.com/search?c=tools)
+>
+> Choose a model and set a 64k+ context window.
 
-<Note>For larger repositories, set the [context length](/context-length) to 64k or higher.</Note>
+> [!NOTE]
+>
+> For larger repositories, set the [context length](https://docs.ollama.com/context-length.md) to 64k or higher.
 
 ## More features
 
@@ -153,7 +68,7 @@ The `--yes` flag skips selectors, pulls the model when needed, and requires `--m
 
 Use Ollama's web search API from Claude Code.
 
-See [Web search](/capabilities/web-search) for setup and usage.
+See [Web search](https://docs.ollama.com/capabilities/web-search.md) for setup and usage.
 
 ### Scheduled tasks with `/loop`
 
@@ -183,21 +98,36 @@ Claude Code prompts for permission on most actions. To allow the bot to work aut
 
 See the [plugin README](https://github.com/anthropics/claude-plugins-official/tree/main/external_plugins/telegram) for setup instructions.
 
+## Connect directly to Ollama's cloud
+
+Install Claude Code, then set your [API key](https://docs.ollama.com/quickstart.md#build-an-application) in `OLLAMA_API_KEY`. No Ollama installation required.
+
+In Bash or Zsh, run:
+
+```shell theme={"system"}
+ANTHROPIC_BASE_URL=https://ollama.com \
+ANTHROPIC_AUTH_TOKEN="$OLLAMA_API_KEY" \
+ANTHROPIC_API_KEY="" \
+claude --model glm-5.3-flash
+```
+
+Use `ANTHROPIC_AUTH_TOKEN` for bearer authentication. Claude settings can override shell variables. Update any base URL or credentials in those settings, then run `/status` to check the connection.
+
+Choose a [cloud model](https://ollama.com/search?c=cloud) that supports tools. Basic chat and file edits work with compatible models. Hosted WebSearch and advanced tool controls are not fully supported. See [Anthropic compatibility](https://docs.ollama.com/api/anthropic-compatibility.md).
+
 ## Manual setup
 
-<p className="manual-step-title">1. Install Claude Code</p>
+1\. Install Claude Code
 
-<CodeGroup>
-  ```shell macOS / Linux theme={"system"}
-  curl -fsSL https://claude.ai/install.sh | bash
-  ```
+```shell macOS / Linux theme={"system"}
+curl -fsSL https://claude.ai/install.sh | bash
+```
 
-  ```powershell Windows theme={"system"}
-  irm https://claude.ai/install.ps1 | iex
-  ```
-</CodeGroup>
+```powershell Windows theme={"system"}
+irm https://claude.ai/install.ps1 | iex
+```
 
-<p className="manual-step-title">2. Set the environment variables</p>
+2\. Set the environment variables
 
 ```shell theme={"system"}
 export ANTHROPIC_AUTH_TOKEN=ollama
@@ -205,7 +135,7 @@ export ANTHROPIC_API_KEY=""
 export ANTHROPIC_BASE_URL=http://localhost:11434
 ```
 
-<p className="manual-step-title">3. Run Claude Code</p>
+3\. Run Claude Code
 
 ```shell theme={"system"}
 claude --model qwen3.5

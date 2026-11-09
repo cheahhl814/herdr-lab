@@ -1,0 +1,109 @@
+
+Guide · Herdr
+Herdr
+App
+Core
+Gallery
+Guide
+Blog
+Herdr TUI ↗
+GitHub
+Download
+Guide
+Ask your agent.
+Everything Herdr can do is written down for your agent, inside the app, and always matches the version you have. It's all open source too, so your agent can read the code when it needs more.
+##
+Get going
+Install Herdr.
+ One line, on the 
+download page
+.
+Start an agent
+ from the 
++
+ in the tab bar: Claude Code, Codex, or any program.
+Point it at the guide.
+ That's the whole tutorial.
+❯
+ Read ~/.config/herdr-app/AGENTS.md
+Copy
+Then ask for what you want. If it can be done, your agent knows how, and if it can't, it tells you why.
+##
+Things to ask
+Prompts that work. Use them as they are or as a start.
+A board of your agents
+❯
+Make me a layout where my agents are cards in columns: needs you, working, done.
+Copy
+A new layout next to yours. Switch between them with ctrl-shift-l.
+A timer on every tab
+❯
+Put a timer on each tab: how long its agent has been working.
+Copy
+Your agent clones the tab bar and edits the copy. Herdr's own stays untouched.
+Your server in the sidebar
+❯
+Add my server box as a machine, then open a space there and start Claude in it.
+Copy
+Its agents join the same list as this computer's.
+A reviewer that reports back
+❯
+Start a reviewer on this branch and tell me what it finds.
+Copy
+A helper agent under yours. It works, reports back, and your agent sums it up.
+One worktree per issue
+❯
+Open a worktree for issue 42 and start Codex on it with the issue as its task.
+Copy
+A new space for the branch, nested under its repo, with the agent already on it.
+Your look
+❯
+Use a light theme, Geist Mono at 15, and a softer sound when an agent needs me.
+Copy
+Your settings change for every layout that leaves them open.
+A ping on your phone
+❯
+When an agent needs me, send a notification to my phone with ntfy.
+Copy
+A small mod that watches the agents and calls ntfy.sh.
+Someone else's layout
+❯
+Read ~/.config/herdr-app/AGENTS.md, then add this layout: herdr.dev/layouts/herdrdev/pasture
+Copy
+Your agent reads every file first, adds it next to yours and switches to it.
+Someone else's mod
+❯
+Read ~/.config/herdr-app/AGENTS.md, then add this mod: herdr.dev/mods/herdrdev/tmux-prefix
+Copy
+Your agent reads every file first, adds the mod and its keys next to yours.
+##
+Go deeper
+The guide your agent reads →
+Every command, file and setting. Written for agents, readable by people.
+The source →
+The app, herdr-core and every mod. Always more up to date than any manual.
+Layouts →
+What people built, with how they built it.
+herdr-core on its own →
+For servers, scripts and your own client. Agents read 
+hc --skill
+.
+Discord →
+Questions, ideas, show what you made.
+Herdr
+Made for your agents. Remade by them.
+Open source, Apache 2.0
+Product
+Download
+Gallery
+herdr-core
+Learn
+Guide
+Blog
+Herdr TUI
+Privacy
+Community
+GitHub
+Discord
+X
+[email protected]

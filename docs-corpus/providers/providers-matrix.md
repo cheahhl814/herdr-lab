@@ -1,27 +1,42 @@
 # Providers & task-tier matrix (curated)
 
-> CURATED summary. Wiring recipes verified against `ollama-online-docs/` (ingested
-> 2026-09-02, Ollama 0.30.0) and each harness's own docs. Model NAMES here are examples
-> seen on this machine — always re-discover live (SKILL.md §4.6). Never cite quotas or
-> prices from this file.
+> CURATED summary. Wiring recipes verified against `ollama-online-docs/` (re-ingested
+> 2026-11-06 from docs.ollama.com, docs snapshot 2026-10-27; local Ollama 0.40.11) and
+> each harness's own docs, plus `ollama launch --help` run live on this machine. Model
+> NAMES here are examples seen on this machine — always re-discover live (SKILL.md §4.6).
+> Never cite quotas or prices from this file.
 
 ## Harness × provider capability matrix
 
 | Harness | Native provider(s) | Alternate-provider mechanism | Ollama wiring |
 |---|---|---|---|
 | pi | anthropic, ollama, google (default google) | `--provider <name>` launch flag | `pi --provider ollama --model <id>` |
-| opencode | 75+ providers | config (`opencode.json` providers) | `ollama launch opencode`; 23 ollama models listed via `opencode models` |
+| opencode | 75+ providers | config (`opencode.json` providers) | `ollama launch opencode`; provider is config-driven — `opencode models` lists 0 ollama models until the provider is wired (verified 2026-11-06, opencode 1.19.3, no ollama provider configured on this box) |
 | claude | Anthropic-locked | Anthropic-compatible API via Ollama | `ollama launch claude` (0.30+) |
 | codex | OpenAI (ChatGPT/API) | `model_providers` in config.toml | `ollama launch codex` (refreshes catalog) |
 | copilot | GitHub-hosted models | env: `COPILOT_PROVIDER_TYPE=openai` (any OpenAI-compatible endpoint incl. Ollama/vLLM), `COPILOT_PROVIDER_API_KEY` (not needed for local Ollama), base-URL var | ollama-online-docs/copilot-cli.md has full env table |
 | gemini CLI | Google-locked | none | not supported |
 | agy | Google-locked | none | not supported |
 | droid | Factory | ollama launch supported | `ollama launch droid --config` |
-| cline, hermes, omp, kimi, others | see ollama-online-docs/integrations/ | varies | check per-integration page; not all herdr kinds have recipes |
+| cline, hermes, omp, kimi, others | see `ollama launch --help` live output | direct `ollama launch <kind>` on 0.40.11 for cline, hermes, omp, kimi; others per-integration | check per-integration page; not all herdr kinds have recipes |
 
-`ollama launch <app>` (Ollama ≥0.30) interactively wires a harness to Ollama models —
-supported: OpenCode, Claude Code, Codex, VS Code, Droid (+ `--model`, `--yes`, `--config`
-flags). When launched this way, Ollama refreshes the harness's model catalog automatically.
+`ollama launch <app>` (Ollama ≥0.30) interactively wires a harness to Ollama models.
+**Source of truth is the local binary, not the docs page**: `ollama launch --help` on
+0.40.11 lists 18 integrations — claude, chatgpt (aliases codex-app/codex-desktop/codex-gui),
+hermes, hermes-desktop, openclaw, opencode, codex, copilot, omp, droid, dsh
+(= deepseek-harness), kimi, muse, pi, pool, cline, qwen, vscode — with flags `--model`,
+`-y/--yes`, `--config` (configure without launching), `--restore`, and `-- [EXTRA_ARGS...]`
+pass-through (e.g. `ollama launch codex -- --sandbox workspace-write`). The docs `cli.md`
+page still lists only five apps (OpenCode, Claude Code, Codex, VS Code, Droid) — it lags
+the binary; never quote the five-app list as the full set.
+
+**herdr kinds directly launchable**: pi, omp, kimi, hermes, cline, droid, copilot,
+opencode, claude, codex. Notably, when a coding-agent integration is launched this way,
+Ollama refreshes that harness's model catalog automatically (per `codex.md`/`opencode.md`).
+**Not herdr kinds** (launchable but not seats herdr manages):
+dsh (DeepSeek Harness — developer-preview, browser agent, upstream config may change),
+openclaw (messaging assistant), qwen, muse, pool, hermes-desktop, vscode, chatgpt,
+claude-desktop.
 
 ## Ollama specifics
 

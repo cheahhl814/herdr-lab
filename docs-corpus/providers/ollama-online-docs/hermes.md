@@ -6,7 +6,7 @@
 
 Hermes Agent is a self-improving AI agent built by Nous Research. It features automatic skill creation, cross-session memory, and 70+ skills that it ships with by default.
 
-<img src="https://mintcdn.com/ollama-9269c548/_5fHmJyR9RXyOCBa/images/hermes.png?fit=max&auto=format&n=_5fHmJyR9RXyOCBa&q=85&s=760b90a13b4f22ea9cdfc9ca69f78184" alt="Hermes Agent with Ollama" width="2232" height="2162" data-path="images/hermes.png" />
+![Hermes Agent with Ollama](https://mintcdn.com/ollama-9269c548/_5fHmJyR9RXyOCBa/images/hermes.png?fit=max\&auto=format\&n=_5fHmJyR9RXyOCBa\&q=85\&s=760b90a13b4f22ea9cdfc9ca69f78184)
 
 ## Quick start
 
@@ -17,25 +17,9 @@ ollama launch hermes
 Ollama handles everything automatically:
 
 1. **Install** — If Hermes isn't installed, Ollama prompts to install the Hermes command-line agent
-2. **Model** — Pick a model from the selector (local or cloud)
+2. **Model** — Pick a model from the selector (local or cloud). See currently-supported models [here](https://ollama.com/search).
 3. **Onboarding** — Ollama configures the Ollama provider, points Hermes at `http://127.0.0.1:11434/v1`, and sets your model as the primary
 4. **Gateway** — Optionally connects a messaging platform (Telegram, Discord, Slack, WhatsApp, Signal, Email) and launches the Hermes chat
-
-## Recommended models
-
-**Cloud models**:
-
-* `kimi-k2.5:cloud` — Multimodal reasoning with subagents
-* `glm-5.1:cloud` — Reasoning and code generation
-* `qwen3.5:cloud` — Reasoning, coding, and agentic tool use with vision
-* `minimax-m2.7:cloud` — Fast, efficient coding and real-world productivity
-
-**Local models:**
-
-* `gemma4` — Reasoning and code generation locally (\~16 GB VRAM)
-* `qwen3.6` — Reasoning, coding, and visual understanding locally (\~24 GB VRAM)
-
-More models at [ollama.com/search](https://ollama.com/search?c=cloud).
 
 ## Connect messaging apps
 

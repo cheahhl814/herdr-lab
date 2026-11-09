@@ -1,0 +1,106 @@
+
+herdr-core · Herdr
+Herdr
+App
+Core
+Gallery
+Guide
+Blog
+Herdr TUI ↗
+GitHub
+Download
+herdr-core · 
+hc
+Terminals that
+never let go.
+A terminal runtime for coding agents. 
+hc
+ runs programs in terminals that stay alive, lets agents start and steer other agents, and lets you attach to any of them and take over. The Herdr app is built on it.
+macOS · Linux
+Windows
+$
+ curl -fsSL https://releases.herdr.dev/core/install.sh | sh
+Copy
+$
+ powershell -c "irm https://releases.herdr.dev/core/install.ps1 | iex"
+Copy
+Based on a real run: Claude Code starts a test run and a Codex reviewer through 
+hc
+, and their reports land in its input.
+README.md
+01
+Run it, keep it
+02
+Agents run agents
+03
+Every machine
+04
+Status from the source
+05
+Build your own client
+##
+Run it, keep it
+Every program runs in a terminal that lives in herdr-core, not in a window. Close the app, quit your terminal, update either one: the program keeps going, and you attach to it again where it was.
+# runs it and waits, like a shell
+hc run cargo test
+# starts it and returns
+hc run --bg --name web bun dev
+# what's running
+hc ls
+# take it over (ctrl+\ detaches)
+hc attach web
+hc update
+ updates herdr-core itself. Running terminals keep running.
+##
+Agents run agents
+An agent can start helpers, give them work, wait for them and read what they did. Helpers live under the agent that started them, report back when they're done, and stop when it stops.
+# start an agent and say how to report back
+hc run --bg --name review codex "review src/x.rs. Done: hc send $HC_TERMINAL_ID"
+# wait until it's done, then read it
+hc wait review
+hc read --lines 60 review
+# steer it
+hc send review "also check the tests"
+Agents get the whole manual in one read: 
+hc --skill
+.
+The recipes for the 
+example layouts
+ on this site were written this way: one agent handed them to a helper, kept working, and got a report back when they were done.
+##
+Every machine
+Add your server, a VM or another laptop over SSH. Its terminals join the same list, and you run things there the same way.
+hc machine add box@my-server
+hc run --on my-server --bg claude
+hc ls                
+# this machine and my-server together
+##
+Status from the source
+herdr-core draws nothing and guesses nothing. A terminal's status (working, done, needs you) is what its program reports through 
+OSC 7501
+, the open Program Status Protocol. No screen scraping, no list of known agents. Any program that speaks it has a status; your own script can too.
+printf '\e]7501;state=blocked:app=my-agent\e\\'
+##
+Build your own client
+The Herdr app is one client. The same API is open to yours: a phone app, an editor panel, a Stream Deck. 
+hc schema
+ prints it as OpenRPC, with streams and events for live updates.
+herdr-core is open source under Apache 2.0. 
+herdrdev/herdr-core →
+Herdr
+Made for your agents. Remade by them.
+Open source, Apache 2.0
+Product
+Download
+Gallery
+herdr-core
+Learn
+Guide
+Blog
+Herdr TUI
+Privacy
+Community
+GitHub
+Discord
+X
+[email protected]

@@ -12,7 +12,9 @@ Install the [Droid CLI](https://factory.ai/):
 curl -fsSL https://app.factory.ai/cli | sh
 ```
 
-<Note>Droid requires a larger context window. It is recommended to use a context window of at least 64k tokens. See [Context length](/context-length) for more information.</Note>
+> [!NOTE]
+>
+> Droid requires a larger context window. It is recommended to use a context window of at least 64k tokens. See [Context length](https://docs.ollama.com/context-length.md) for more information.
 
 ## Usage with Ollama
 
@@ -49,7 +51,7 @@ Add a local configuration block to `~/.factory/config.json`:
 
 ## Cloud Models
 
-`qwen3-coder:480b-cloud` is the recommended model for use with Droid.
+The following example configures `qwen3-coder` for use with Droid.
 
 Add the cloud configuration block to `~/.factory/config.json`:
 
@@ -57,7 +59,7 @@ Add the cloud configuration block to `~/.factory/config.json`:
 {
   "custom_models": [
     {
-      "model_display_name": "qwen3-coder [Ollama Cloud]",
+      "model_display_name": "qwen3-coder [Ollama's cloud]",
       "model": "qwen3-coder:480b-cloud",
       "base_url": "http://localhost:11434/v1/",
       "api_key": "not-needed",
@@ -77,7 +79,7 @@ Add the cloud configuration block to `~/.factory/config.json`:
    {
      "custom_models": [
        {
-         "model_display_name": "qwen3-coder [Ollama Cloud]",
+         "model_display_name": "qwen3-coder [Ollama's cloud]",
          "model": "qwen3-coder:480b",
          "base_url": "https://ollama.com/v1/",
          "api_key": "OLLAMA_API_KEY",

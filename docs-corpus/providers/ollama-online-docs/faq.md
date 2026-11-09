@@ -16,11 +16,11 @@ curl -fsSL https://ollama.com/install.sh | sh
 
 ## How can I view the logs?
 
-Review the [Troubleshooting](./troubleshooting.mdx) docs for more about using logs.
+Review the [Troubleshooting](https://docs.ollama.com/troubleshooting.md) docs for more about using logs.
 
 ## Is my GPU compatible with Ollama?
 
-Please refer to the [GPU docs](./gpu.mdx).
+Please refer to the [GPU docs](https://docs.ollama.com/gpu.md).
 
 ## How can I specify the context window size?
 
@@ -58,14 +58,14 @@ Use the `ollama ps` command to see what models are currently loaded into memory.
 ollama ps
 ```
 
-<Info>
-  **Output**:
-
-  ```
-  NAME        ID            SIZE    PROCESSOR   UNTIL
-  llama3:70b  bcfb190ca3a7  42 GB   100% GPU    4 minutes from now
-  ```
-</Info>
+> [!NOTE]
+>
+> **Output**:
+>
+> ```
+> NAME        ID            SIZE    PROCESSOR   UNTIL
+> llama3:70b  bcfb190ca3a7  42 GB   100% GPU    4 minutes from now
+> ```
 
 The `Processor` column will show which memory the model was loaded into:
 
@@ -131,10 +131,10 @@ On Windows, Ollama inherits your user and system environment variables.
 
 Ollama pulls models from the Internet and may require a proxy server to access the models. Use `HTTPS_PROXY` to redirect outbound requests through the proxy. Ensure the proxy certificate is installed as a system certificate. Refer to the section above for how to use environment variables on your platform.
 
-<Note>
-  Avoid setting `HTTP_PROXY`. Ollama does not use HTTP for model pulls, only
-  HTTPS. Setting `HTTP_PROXY` may interrupt client connections to the server.
-</Note>
+> [!NOTE]
+>
+> Avoid setting `HTTP_PROXY`. Ollama does not use HTTP for model pulls, only
+> HTTPS. Setting `HTTP_PROXY` may interrupt client connections to the server.
 
 ### How do I use Ollama behind a proxy in Docker?
 
@@ -161,7 +161,7 @@ docker run -d -e HTTPS_PROXY=https://my.proxy.example.com -p 11434:11434 ollama-
 
 Ollama runs locally. We don't see your prompts or data when you run locally. When using cloud-hosted models, we process your prompts and responses to provide the service but do not store or log that content and never train on it. We collect basic account info and limited usage metadata to provide the service that does not include prompt or response content. We don't sell your data. You can delete your account anytime.
 
-## How do I disable Ollama Cloud features?
+## How do I disable Ollama's cloud features?
 
 Ollama can run in local only mode by disabling Ollama's cloud features. By turning off Ollama's cloud features, you will lose the ability to use Ollama's cloud models and web search.
 
@@ -241,15 +241,15 @@ Refer to the section [above](#how-do-i-configure-ollama-server) for how to set e
 
 If a different directory needs to be used, set the environment variable `OLLAMA_MODELS` to the chosen directory.
 
-<Note>
-  On Linux using the standard installer, the `ollama` user needs read and write access to the specified directory. To assign the directory to the `ollama` user run `sudo chown -R ollama:ollama <directory>`.
-</Note>
+> [!NOTE]
+>
+> On Linux using the standard installer, the `ollama` user needs read and write access to the specified directory. To assign the directory to the `ollama` user run `sudo chown -R ollama:ollama <directory>`.
 
 Refer to the section [above](#how-do-i-configure-ollama-server) for how to set environment variables on your platform.
 
 ## How can I use Ollama in Visual Studio Code?
 
-Install the [Ollama extension](https://marketplace.visualstudio.com/items?itemName=Ollama.ollama) to use Ollama models in VS Code Chat. See the [VS Code integration guide](./integrations/vscode.mdx) for setup and troubleshooting.
+Install the [Ollama extension](https://marketplace.visualstudio.com/items?itemName=Ollama.ollama) to use Ollama models in VS Code Chat. See the [VS Code integration guide](https://docs.ollama.com/integrations/vscode.md) for setup and troubleshooting.
 
 ## How do I use Ollama with GPU acceleration in Docker?
 
@@ -354,10 +354,10 @@ To use quantized K/V cache with Ollama you can set the following environment var
 
 * `OLLAMA_KV_CACHE_TYPE` - The quantization type for the K/V cache. Default is `f16`.
 
-<Note>
-  Currently this is a global option - meaning all models will run with the
-  specified quantization type.
-</Note>
+> [!NOTE]
+>
+> Currently this is a global option - meaning all models will run with the
+> specified quantization type.
 
 The currently available K/V cache quantization types are:
 
@@ -377,7 +377,7 @@ You'll need it to:
 
 * Push models to Ollama
 * Pull private models from Ollama to your machine
-* Run models hosted in [Ollama Cloud](https://ollama.com/cloud)
+* Run models hosted in [Ollama's cloud](https://ollama.com/cloud)
 
 ### How to Add the Key
 
@@ -394,15 +394,15 @@ ollama signin
 
 ### Where the Ollama Public Key lives
 
-| OS      | Path to `id_ed25519.pub`                     |
-| :------ | :------------------------------------------- |
-| macOS   | `~/.ollama/id_ed25519.pub`                   |
-| Linux   | `/usr/share/ollama/.ollama/id_ed25519.pub`   |
+| OS | Path to `id_ed25519.pub` |
+| :- | :- |
+| macOS | `~/.ollama/id_ed25519.pub` |
+| Linux | `/usr/share/ollama/.ollama/id_ed25519.pub` |
 | Windows | `C:\Users\<username>\.ollama\id_ed25519.pub` |
 
-<Note>
-  Replace \<username> with your actual Windows user name.
-</Note>
+> [!NOTE]
+>
+> Replace \<username> with your actual Windows user name.
 
 ## How can I stop Ollama from starting when I login to my computer?
 
