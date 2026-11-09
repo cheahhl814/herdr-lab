@@ -91,6 +91,7 @@ Seats you start with `hc` are **hidden from the window**. Choose per case:
 | `hc run` exits 124 `[hc] still running as tN` | 180 s default timeout | program keeps running; `hc wait tN`, do not relaunch |
 | `not_started` from `send --wait` | turn never began | `hc read` before deciding |
 | Seat gone after reboot/crash | lost program | `keep` recovery gives a shell in the last folder and never reruns the task; mark `lost`, re-dispatch only with approval |
+| `tab.new --argv '["claude"]'` tab dies at once, exit 127, `Error reading script file 'claude'` | the app launches argv through `$SHELL -ic '"$@"'`, and a `~/.bashrc` line `exec fish "$@"` (guard missing for `bash -c`) turns it into `fish claude …` | tested 2026-11-09; fixed on the author's machine by adding `-z $BASH_EXECUTION_STRING` to that `if`, after which `tab.new --argv` ran. If it recurs elsewhere, workaround: `herdr-app do tab.new --name X --folder D` (plain shell), then `hc send <t> "claude \"\$(cat task.txt)\""`. Root fix is the user's: skip the `exec fish` when `$BASH_EXECUTION_STRING` is set. Do not edit their shell rc without asking |
 | Exit codes 3/7/9/10/11 | not_found / needs_target / blocked / status_mismatch / finished | error JSON is on stderr: `{error:{kind,message,hint}}` |
 | `done` but wrong output | false settlement | re-prompt "continue", require the completion signal |
 
@@ -103,7 +104,7 @@ Same rules as delegation §5: never send, pipe, or paste a secret; never run it 
 3. `hc wait priv` for exit (race-free), then `hc read priv`. Use `--output X` only when the wait starts before X can print: it matches output printed **after** the wait begins.
 4. Keep it until follow-ups are done (sudo caching is per tty), then `hc kill`/`hc rm`.
 
-*Status: live-tested 2026-11-09 (hc 0.1.18): a hidden claude seat via `hc run --bg --name … --cwd <scratch> claude "<task>"` reached `status: done`, `hc read` showed the exact completion signal, `kill` + `rm` removed it; `wait --output X` times out when X printed before the wait began and returns `reason: output` when the wait started first. The password-entry flow itself was not live-tested.*
+*Status: live-tested 2026-11-09 (hc 0.1.18): a hidden claude seat via `hc run --bg --name … --cwd <scratch> claude "<task>"` reached `status: done`, `hc read` showed the exact completion signal, `kill` + `rm` removed it; `wait --output X` times out when X printed before the wait began and returns `reason: output` when the wait started first. A fresh claude session in a new tab then picked this edition from the router, loaded this sub-skill and ran the hc delegation correctly (also 2026-11-09). The password-entry flow itself was not live-tested.*
 
 ## §4 Ledger
 
