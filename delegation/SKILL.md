@@ -14,6 +14,7 @@ requires:
   - pi-herdr plugin installed and active (HERDR_PANE_ID set)
   - HERDR_ENV=1
   - docs-corpus/ present (reached via the docs-corpus symlink sibling of this file, or alongside the herdr-lab router)
+disable-model-invocation: true
 ---
 
 > **Edition guard.** This sub-skill is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: stop and use `desktop/SKILL.md` (`herdr-lab-desktop`) instead; never issue `herdr agent/pane/workspace ...` there.

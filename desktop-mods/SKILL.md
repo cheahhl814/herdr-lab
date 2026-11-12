@@ -11,6 +11,7 @@ requires:
   - herdr-app >= 0.1.13 with a running window (for status and shot)
   - ~/.config/herdr-app/AGENTS.md and herdr.d.ts (the app rewrites them on every start; they are the truth)
   - docs-corpus/herdr-desktop/ present (via the docs-corpus symlink)
+disable-model-invocation: true
 ---
 
 # herdr-lab desktop mods

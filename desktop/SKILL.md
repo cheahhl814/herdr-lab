@@ -12,6 +12,7 @@ requires:
   - hc >= 0.1.18 (herdr-core) and herdr-app >= 0.1.13 on PATH
   - HC_TERMINAL_SOCKET set (this shell runs inside a herdr-core terminal)
   - docs-corpus/herdr-desktop/ present (via the docs-corpus symlink)
+disable-model-invocation: true
 ---
 
 # herdr-lab desktop edition

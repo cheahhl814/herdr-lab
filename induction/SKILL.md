@@ -13,6 +13,7 @@ requires:
   - herdr >= 0.8.0
   - HERDR_ENV=1
   - docs-ingest skill (optional; without it, capture --help only)
+disable-model-invocation: true
 ---
 
 > **Edition guard.** This sub-skill is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: stop and use `desktop/SKILL.md` (`herdr-lab-desktop`) instead; never issue `herdr agent/pane/workspace ...` there.
