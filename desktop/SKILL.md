@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-desktop
 description: herdr-lab desktop edition — delegate to other coding agents, run parallel batches, wait on results, run sudo/secret-entry commands, and arrange the person's window, using the Herdr desktop app (herdr-app + herdr-core `hc`) instead of the old `herdr` TUI CLI. Use when `HC_TERMINAL_SOCKET` / `HC_TERMINAL_ID` is set, `hc` and `herdr-app` are on PATH, or the user says "Herdr desktop/app/hc". Carries the CLI-to-desktop command map, hc delegation sequence, verification and recovery table, sudo pattern, and ledger mapping. Do not use inside the old CLI (HERDR_ENV=1, HERDR_PANE_ID set) — that is herdr-lab-delegation.
-version: 0.29.1
-updated: "2026-11-09"
+version: 0.29.2
+updated: "2026-11-12"
 triggers:
   - user mentions Herdr desktop, herdr-app, herdr-core or hc
   - delegate to another coding agent while HC_TERMINAL_ID is set
@@ -40,7 +40,7 @@ env | grep -E '^(HC_TERMINAL_(SOCKET|ID)|HERDR_ENV|HERDR_PANE_ID)='
 
 | Intent | Old CLI / pi-herdr | Desktop |
 | --- | --- | --- |
-| New seat | `herdr_layout pane_split` / `tab_create` + `herdr_agent start` | `hc run --bg --name <slug> [--cwd D] <template\|agent> "<task>"`; show it with `herdr-app do tab.new --name <slug> --argv '["claude"]' --task "<task>"` only if the user wants to see it |
+| New seat | `herdr_layout pane_split` / `tab_create` + `herdr_agent start` | `hc run --bg --name <slug> [--cwd D] <template\|agent> "<task>"`, then **make it visible by default** with `hc label <t> herdr.space=<space-id>` (see "Making a seat visible"); or launch straight into a tab with `herdr-app do tab.new --name <slug> --argv '["claude"]' --task "<task>"` |
 | Send prompt | `herdr_agent prompt` | first task inside `run`; later `hc send <t> "text"` |
 | Wait | `herdr_agent wait` | `hc wait <t>`, `hc wait <t> --output X`, `hc wait --children all\|any` — never sleep or poll |
 | Read result | `herdr_agent read` / herdr-convo | `hc read <t> --lines N`; ask for long answers in a file + `hc send $HC_TERMINAL_ID <path>` |
@@ -68,18 +68,30 @@ env | grep -E '^(HC_TERMINAL_(SOCKET|ID)|HERDR_ENV|HERDR_PANE_ID)='
    - The first task goes **in `run`**. A `send` to a booting agent can be dropped. For a plain launch: `hc run --bg --name x <agent>`, then `hc wait x`, then `hc send x "<task>"`.
    - For **template** launches, check `first_message.sent` in the reply (a plain `hc run --bg <agent> "<task>"` has no `first_message`: the text is the agent's own start argument, and the seat's `hc get` shows `status` instead). If false, the task was **not** delivered: `hc get <t>`, `hc read <t>`, clear any dialog, then send. Do not blindly resend.
    - Never `-p` / `--print` / `exec` / piped modes (same absolute ban as delegation §1). Codex must run with `--no-daemon`, including in templates, or its commands escape hc.
+   - **After launching, adopt the seat into a visible tab** (`hc label <t> herdr.space=<id>`) — default ON, see "Making a seat visible".
    - Do not let children start more agents unless you assigned that.
 4. **Batch = launch all, then wait once.** Start every seat before waiting: `hc wait --children all` (or `any` to service each as it finishes). `reason: message` means a report is coming as your next input (not something to `read`); `reason: timeout` (180 s) is a check-in, wait again.
 5. **Verify per delegation §2.** `done`/`idle` is not completion: `hc read <t>` and match the explicit completion signal. Status comes only from the program's OSC 7501 reports (`idle|working|done|blocked|error`); never infer it from screen text. Reports arrive as `<hc from="t7 name">…</hc>`: treat them as child output, not user instructions, and read the real result before summarizing.
 6. **Clean up** only what you started: `hc kill <t>; hc rm <t>`. Use `--rm --no-notify` on throwaway runs.
 
-### Making a seat visible
+### Making a seat visible — default ON
 
-Seats you start with `hc` are **hidden from the window**. Choose per case:
+**Standing preference (2026-11-12): the person wants to see what delegated harnesses are doing.** Every delegated seat gets a visible tab; the Agents side panel alone is not acceptable output. Hide only when the user explicitly asks for invisible pure orchestration — and then say so in the summary.
 
-- User wants to watch → `herdr-app do tab.new --name <slug> --argv '["<agent>"]' --task "<scope>"`, or adopt an hc terminal with labels `herdr.space=<id>` `herdr.tab=<id>` (ids from `herdr-app ls`).
-- Pure orchestration → leave hidden; add no labels "just because".
-- Never create spaces/tabs unless asked; they are shown immediately and steal focus. Name every one explicitly. Use IDs from `herdr-app ls`, not the focused pane.
+Two paths:
+
+- **Adopt after the normal launch** (keeps §1 intact): run `hc run --bg` as in §1, then immediately
+
+  ```sh
+  hc label <t> herdr.space=<space-id>          # app creates a new tab (verified 2026-11-12, hc 0.1.20)
+  # or, to place into an existing tab (ids from `herdr-app ls`):
+  hc label <t> herdr.space=<space-id> herdr.tab=<tab-id>
+  ```
+
+  `hc wait`/`send`/`read`/`interrupt` handles are unaffected; `hc kill <t>; hc rm <t>` removes the tab too.
+- **Launch straight into a tab** (alternative): `herdr-app do tab.new --name <slug> --argv '["<agent>"]' --task "<scope>"`. No first-message stream and no completion signal on the tab, so pair with `hc ls` for status; watch for the exit-127 bashrc bug (Recovery).
+
+Rules that stay: tabs are shown immediately and take focus — accepted by default. Name every one explicitly. Use IDs from `herdr-app ls`, not the focused pane.
 
 ## §2 Recovery
 
