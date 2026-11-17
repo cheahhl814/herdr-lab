@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-delegation
 description: Old herdr TUI CLI edition only (for the Herdr desktop app use herdr-lab-desktop). herdr-lab delegation core (§1-§5) — delegate tasks to another coding agent via herdr panes, run parallel batches (tab-first topology, staged dispatch), verify completion signals, recover stalls/false-settlements, discover models+quota pre-flight (pi/opencode/claude/codex/copilot/agy), match providers to task tiers (T0-T3), and run sudo / privileged / secret-entry commands safely in a dedicated pane. Ships the interruption-survivable batch ledger bin/herdr-batch.py and the offline docs-corpus (verbatim --help captures + online docs for herdr + 7 harnesses; never invent a flag not present there). Workflow-only, tool schemas are the source of truth. Use when the user mentions Herdr, asks to delegate to another agent, run agents in parallel, run a privileged/secret-entry command in a managed pane, or check another agent's quota/usage.
-version: 0.29.1
-updated: "2026-11-09"
+version: 0.32.0
+updated: "2026-11-17"
 triggers:
   - user mentions Herdr by name
   - delegate a task to another coding agent
@@ -235,6 +235,7 @@ Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recomme
 - **Brainstorm**: deliberately **different families per seat**; do not run the whole fleet on the strongest model (cost, and you lose the disagreement signal). Mix strong and cheap across seats, and put at least one seat on a *different provider* when one is available — one provider's training and policy shapes every seat on it.
 - **Local models are legitimate seats** (cheap, private, independent) but weaker at T2: use a local seat for T0/T1 or as the diversity seat, not as the decisive seat. Check `ollama ps` / `ollama list` first (§4.6 Ollama note).
 - **Same family, different model is not diversity** — two seats on the same family share the same blind spots; count *families*, not model strings.
+- **Effort / thinking follows the tier, not habit.** T0 off–low (input dominates; thinking tokens are ~noise), T1 low–medium, **T2 medium–high** (a planning failure here costs a re-dispatch; this is where effort pays), T3 low. Never `max` across a fleet — latency and quota scale with seats. For brainstorm rounds, put low–medium on juror/breadth seats and reserve medium–high for the synthesis or deciding seat. For pure fan-out, see `parallel/SKILL.md` for the same table applied to N identical seats.
 
 ### 4.7.5 Budget and quota across the fleet
 

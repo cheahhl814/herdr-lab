@@ -1,22 +1,35 @@
 ---
 name: herdr-lab-induction
-description: Old herdr TUI CLI edition only (for the Herdr desktop app use herdr-lab-desktop). herdr-lab harness induction — introduce the primary harness to an installed secondary harness, or refresh one already known. Captures --help and the version (bin/herdr-induct.py), ingests official docs into docs-corpus/ with the optional docs-ingest skill, fills a harness card (flags, quota surface, login check), then proves the harness works with one live interactive herdr seat. Use when the user wants to add, introduce, onboard, or induct a new harness or coding agent, or refresh, re-capture, or update the docs for one. Writes to the repo working tree for review; never commits, installs a harness, or changes credentials or routing. References herdr-lab-delegation sections (§N) for the seat itself.
-version: 0.29.1
-updated: "2026-11-09"
+description: "Old herdr TUI CLI edition for harness induction (for the Herdr desktop app use herdr-lab-desktop) — plus, on the desktop edition, the guided setup of seat templates in ~/.config/herdr-core/templates/ — lean read-only and heavy working tiers (offered when that directory is missing or empty). Induction: captures --help and version (bin/herdr-induct.py), ingests official docs into docs-corpus/, fills a harness card (flags, quota surface, login check), proves the harness with one live interactive herdr seat. Use when the user wants to add, onboard, or induct a harness or coding agent, refresh the corpus, check whether a harness works through herdr, or set up desktop seat templates (lean or heavy tier). Writes to the repo working tree for review; never commits, installs a harness, or changes credentials or routing. References herdr-lab-delegation sections (§N) for the seat itself."
+version: 0.32.0
+updated: "2026-11-17"
 triggers:
   - introduce / onboard / induct a new harness or coding agent to herdr-lab
   - add a new harness to the docs-corpus
   - refresh / re-capture the docs-corpus for a harness
   - check whether a harness actually works through herdr
+  - set up desktop seat templates (lean or heavy tier) / herdr-core templates / lean seats
 requires:
   - herdr-lab-delegation conventions available (reads its §1-§5 for the live seat)
-  - herdr >= 0.8.0
-  - HERDR_ENV=1
+  - herdr >= 0.8.0 and HERDR_ENV=1 (CLI induction only; template setup is desktop-only, needs hc)
   - docs-ingest skill (optional; without it, capture --help only)
 disable-model-invocation: true
 ---
 
-> **Edition guard.** This sub-skill is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: stop and use `desktop/SKILL.md` (`herdr-lab-desktop`) instead; never issue `herdr agent/pane/workspace ...` there.
+> **Edition guard.** The induction procedure below (capture → card → live seat) is for the old `herdr` TUI CLI. If `HC_TERMINAL_ID` is set and `HERDR_PANE_ID` is not, you are in the Herdr desktop app: never issue `herdr agent/pane/workspace ...` there — use `desktop/SKILL.md` (`herdr-lab-desktop`) for delegation and the section just below for template setup.
+
+## Desktop: seat-template setup (desktop edition only)
+
+Herdr Desktop keeps reusable seat templates in `~/.config/herdr-core/templates/<name>.md`. This skill ships curated ones in `desktop/templates/` — a lean read-only tier (T0/T3 seats: no skills/extensions/MCP injection, no edit rights) and a heavy working tier (T1/T2 seats: full tools, stronger model / higher effort, intermediate approval posture). See that folder's README.md; one per harness in the corpus, one per harness in the corpus. Nothing is installed until the user says so.
+
+**When to offer.** Only when (a) the host is the Herdr desktop app (`HC_TERMINAL_ID` set), and (b) either the user asks for template/seat setup, or `~/.config/herdr-core/templates/` is missing or empty, or some repo templates are not yet installed and the user is about to delegate. Never install unasked; never overwrite an existing template without explicit per-file confirmation.
+
+1. **Probe (read-only).** `ls ~/.config/herdr-core/templates/`; for each candidate harness (`pi claude codex gemini copilot opencode agy`), `command -v <bin>` and `<bin> --version` under a short timeout; `ollama list` when ollama exists (cloud `:cloud` models need `ollama signin`); `pi --list-models` for pi. A missing binary is a fact — report it; never install, upgrade, or log into anything (the base Refusals apply here too).
+2. **Ask, don't assume** (host ask-user tool). Which templates to install — the lean read-only set, the heavy working set, or both (both ship in `desktop/templates/`); per-tier provider/model picks (harness default is fine; pi defaults to this machine's Ollama cloud model); whether any existing file may be overwritten (default: never).
+3. **Install.** `bin/install-templates.sh [--only a,b,c]` (resolves via this sub-skill's `bin/` symlink). Skipped-existing files are reported, never replaced without `--force`.
+4. **Customize per seat — always, not opt-in.** After install, walk every newly installed template with the user (a multi-select of "which seats to change", one follow-up per pick): keep the shipped default, or change (a) provider/model, (b) thinking/effort, (c) approval posture — intermediate ↔ yolo for unattended heavy seats, read-only ↔ intermediate only on explicit request. Edit the **installed** copies' `command:`/body, never the repo's templates. Report a final table: template → provider/model, effort, posture. If the user keeps every default, say so in one line and move on.
+5. **Verify.** `hc templates` lists the install; suggest one cheap smoke seat per installed template (user's call whether to spend the tokens), then `hc kill`/`hc rm` it.
+6. **Report.** What was installed, what was skipped and why, and which seats are read-only vs approval-gated. If captures look stale (a flag in a template is absent from the local `--help`), say so and prefer `--help` over the template.
 
 # herdr-lab harness induction
 

@@ -1,6 +1,6 @@
 # herdr-lab-induction
 
-**Skill name**: `herdr-lab-induction` · **Version**: 0.29.1 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-induction` · **Version**: 0.32.0 · **Type**: agent skill (workflow-only)
 
 The onboarding step of the [herdr-lab](https://github.com/cheahhl814/herdr-lab) family: introduces the primary harness to an installed secondary harness, then proves the harness works. Running it again on a known harness refreshes its corpus entry.
 
@@ -13,6 +13,7 @@ The onboarding step of the [herdr-lab](https://github.com/cheahhl814/herdr-lab) 
 - add a new harness to the docs-corpus
 - refresh / re-capture the docs-corpus for a harness
 - check whether a harness actually works through herdr
+- set up desktop seat templates / ~/.config/herdr-core/templates/ (desktop edition only)
 ```
 
 ## What it produces
@@ -22,6 +23,10 @@ The onboarding step of the [herdr-lab](https://github.com/cheahhl814/herdr-lab) 
 | `docs-corpus/harnesses/help-<kind>.md` | Verbatim `--help`, stamped with date and version, machine details scrubbed |
 | `docs-corpus/harnesses/<kind>-online-docs/` | Official docs, via the optional `docs-ingest` skill |
 | `docs-corpus/harnesses/<kind>-card.md` | The facts delegation needs: flags, quota surface, login check, live-test verdict |
+
+## Desktop seat templates (desktop edition)
+
+On the Herdr desktop app, this sub-skill also owns the guided setup of the seat templates in `desktop/templates/` — lean read-only and heavy working tiers (installed into `~/.config/herdr-core/templates/` — the only directory `hc` reads). It is offered when that directory is missing/empty; nothing is installed without your explicit yes. Probe → ask (harnesses, provider/model, read-only vs approval-gated) → `bin/install-templates.sh` (no-overwrite; `--dry-run` supported) → edit the installed copies for your models → `hc templates` to verify. See `../desktop/templates/README.md` for the template catalogue and per-harness caveats.
 
 ## Capture script
 

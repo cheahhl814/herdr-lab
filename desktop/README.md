@@ -1,6 +1,6 @@
 # herdr-lab-desktop
 
-**Skill name**: `herdr-lab-desktop` · **Version**: 0.29.1 · **Type**: agent skill (workflow-only)
+**Skill name**: `herdr-lab-desktop` · **Version**: 0.32.0 · **Type**: agent skill (workflow-only)
 
 Delegation, parallel batches, waiting, recovery and sudo/secret entry for the Herdr desktop app, using `hc` to run agents and `herdr-app` to arrange the window. Includes the old-CLI-to-desktop command map and how brainstorm and induction transport onto `hc`.
 
@@ -18,6 +18,10 @@ Delegation, parallel batches, waiting, recovery and sudo/secret entry for the He
 ## Sources
 
 Offline copies live in `docs-corpus/herdr-desktop/` (see its provenance table in [docs-corpus/README.md](../docs-corpus/README.md)). Live manuals: `hc --skill`, `herdr-app --skill`, `herdr-app commands`, `~/.config/herdr-app/AGENTS.md`.
+
+## Seat templates
+
+`templates/` ships two tiers — lean read-only (`pi-lean`, `claude-lean`, `codex-lean`, `gemini-lean`, `copilot-lean`, `opencode-lean`, `agy-lean`) and heavy working seats (`*-heavy`, T1/T2, intermediate approval posture) — for `hc run --bg --name x <template> "<task>"`. Nothing is installed by this repo — `hc` reads only `~/.config/herdr-core/templates/`; run `bin/install-templates.sh` (no-overwrite; `--dry-run` to preview) or let `herdr-lab-induction` offer the guided setup. See [`templates/README.md`](templates/README.md).
 
 ## Install
 

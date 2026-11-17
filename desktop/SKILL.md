@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-desktop
 description: herdr-lab desktop edition — delegate to other coding agents, run parallel batches, wait on results, run sudo/secret-entry commands, and arrange the person's window, using the Herdr desktop app (herdr-app + herdr-core `hc`) instead of the old `herdr` TUI CLI. Use when `HC_TERMINAL_SOCKET` / `HC_TERMINAL_ID` is set, `hc` and `herdr-app` are on PATH, or the user says "Herdr desktop/app/hc". Carries the CLI-to-desktop command map, hc delegation sequence, verification and recovery table, sudo pattern, and ledger mapping. Do not use inside the old CLI (HERDR_ENV=1, HERDR_PANE_ID set) — that is herdr-lab-delegation.
-version: 0.30.0
-updated: "2026-11-12"
+version: 0.32.0
+updated: "2026-11-17"
 triggers:
   - user mentions Herdr desktop, herdr-app, herdr-core or hc
   - delegate to another coding agent while HC_TERMINAL_ID is set
@@ -58,7 +58,7 @@ env | grep -E '^(HC_TERMINAL_(SOCKET|ID)|HERDR_ENV|HERDR_PANE_ID)='
 
 1. **Decide fleet, then seats**, using delegation §4.7 (fleet size → harness spread → model per seat → budget). That reasoning is edition-independent; read it there. Probe availability on this machine, never from memory.
 
-2. **Template first.** `hc templates` lists roles (empty on a fresh install; templates are `~/.config/herdr-core/templates/<name>.md`). Use one that fits.
+2. **Template first.** `hc templates` lists roles (`~/.config/herdr-core/templates/<name>.md`). If the directory is missing or empty, offer the guided setup in `induction/SKILL.md` ("Desktop: lean-seat template setup") or run `bin/install-templates.sh --dry-run` to preview this skill's shipped seat templates (`desktop/templates/`: lean read-only + heavy working tiers); install only with the user's yes. Use a fitting template when one exists.
 
 3. **Launch interactive and in the background**, one named seat per task, exact scope in the first message:
    

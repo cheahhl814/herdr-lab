@@ -1,8 +1,8 @@
 ---
 name: herdr-lab-desktop-mods
 description: herdr-lab desktop mods and layouts — change the Herdr desktop app's own interface (herdr-app) by editing files under ~/.config/herdr-app, such as writing or cloning a mod (gpui-kit JavaScript panel), clone a layout, rebind keys, add a program entry, install a community layout/mod from herdr.dev, or port an old herdr-CLI plugin idea (usage/quota meters, status widgets) to a mod. Enforces the check → status → shot verification loop and the clone-before-edit rule. Use when the user asks to customize, restyle or extend the Herdr app window; not for delegating agents (herdr-lab-desktop).
-version: 0.29.1
-updated: "2026-11-09"
+version: 0.32.0
+updated: "2026-11-17"
 triggers:
   - customize / restyle / extend the Herdr desktop app
   - write, clone, check or install a herdr-app mod or layout

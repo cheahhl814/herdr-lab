@@ -1,6 +1,6 @@
 # herdr-lab
 
-[![Version](https://img.shields.io/badge/version-0.30.0-blue)](#installation)
+[![Version](https://img.shields.io/badge/version-0.32.0-blue)](#installation)
 [![Type](https://img.shields.io/badge/type-agent%20skill-blueviolet)](#installation)
 [![Built with](https://img.shields.io/badge/built%20with-bioinfo--skill--creator-orange)](https://github.com/cheahhl814/bioinfo-skill-creator)
 
@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.30.0** (updated 2026-11-12). The workflow is split into a router master + five independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.30.0 mandates **approval flags on every delegated desktop launch** (bare seats stalled at permission prompts under `hc wait`). v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
+> Current version: **v0.32.0** (updated 2026-11-17). The workflow is split into a router master + six independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-parallel` (fan-out seats), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.31.0 adds **lean read-only seat templates for the Herdr desktop** (`desktop/templates/`, installed into `~/.config/herdr-core/templates/` via `bin/install-templates.sh` or the induction-guided setup) and the **parallel subagents mode**. v0.32.0 adds a **heavy working tier** (T1/T2: stronger models, higher effort, intermediate approval posture) alongside the lean read-only tier, and the induction flow now customizes each installed seat with you (model, effort, posture). v0.30.0 mandates **approval flags on every delegated desktop launch** (bare seats stalled at permission prompts under `hc wait`). v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
 
 ## Contents
 
@@ -54,7 +54,7 @@ Install the herdr-lab skill from
 https://github.com/cheahhl814/herdr-lab —
 clone it into your agent's skills directory (the path your agent watches
 for skills). Then read SKILL.md (the router) and the sub-skill SKILL.md
-you need (delegation/SKILL.md for §1-§5 delegation, brainstorm/SKILL.md
+you need (delegation/SKILL.md for §1-§5 delegation, parallel/SKILL.md for fan-out of independent subtasks, brainstorm/SKILL.md
 for bidirectional critique rounds). Confirm when the environment is
 ready.
 ```
@@ -71,25 +71,27 @@ ln -sf "$(pwd)/herdr-lab" ~/.pi/agent/skills/herdr-lab
 # directory a skill is discovered under and the skill it declares agree:
 ln -sf "$(pwd)/herdr-lab/delegation" ~/.pi/agent/skills/herdr-lab-delegation
 ln -sf "$(pwd)/herdr-lab/brainstorm" ~/.pi/agent/skills/herdr-lab-brainstorm
+ln -sf "$(pwd)/herdr-lab/parallel" ~/.pi/agent/skills/herdr-lab-parallel
 ln -sf "$(pwd)/herdr-lab/desktop" ~/.pi/agent/skills/herdr-lab-desktop
 ln -sf "$(pwd)/herdr-lab/desktop-mods" ~/.pi/agent/skills/herdr-lab-desktop-mods
 ```
 
 > [!TIP]
-> If your harness reads `~/.agents/skills/` instead of `~/.pi/agent/skills/`, symlink into that directory instead — same links, same names. Both the router (`herdr-lab`) and the five sub-skills (`herdr-lab-delegation`, `herdr-lab-brainstorm`, `herdr-lab-induction`, `herdr-lab-desktop`, `herdr-lab-desktop-mods`) are then discovered independently, and each sub-skill's `docs-corpus` / `bin` symlinks still resolve.
+> If your harness reads `~/.agents/skills/` instead of `~/.pi/agent/skills/`, symlink into that directory instead — same links, same names. Both the router (`herdr-lab`) and the six sub-skills (`herdr-lab-delegation`, `herdr-lab-parallel`, `herdr-lab-brainstorm`, `herdr-lab-induction`, `herdr-lab-desktop`, `herdr-lab-desktop-mods`) are then discovered independently, and each sub-skill's `docs-corpus` / `bin` symlinks still resolve.
 
 The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/herdr-batch.py`, the §1.6 batch ledger) is stdlib-only.
 
 ## Workflow phases
 
-The skill is a **router master + five sub-skills** (three for the old `herdr` CLI edition, two for the desktop edition). `SKILL.md` routes; the sub-skills do the work. Each sub-skill has its own frontmatter (name, description, version, triggers) and can be symlinked as a standalone skill.
+The skill is a **router master + six sub-skills** (three for the old `herdr` CLI edition, two for the desktop edition, plus `parallel`, which works in both editions). `SKILL.md` routes; the sub-skills do the work. Each sub-skill has its own frontmatter (name, description, version, triggers) and can be symlinked as a standalone skill.
 
 | Path | Skill name | When it is read |
 |:-----|:-----------|:----------------|
 | `SKILL.md` | `herdr-lab` | Router: detects the edition (old CLI vs desktop) and the intent, then routes; fires on bare "use herdr" |
+| `parallel/SKILL.md` | `herdr-lab-parallel` | "fan out this task", "parallel subagents", homogeneous fan-out of one task to N seats — independence precheck, 2–5 seat cap, per-seat tier/effort table, barrier, merge + verify |
 | `delegation/SKILL.md` | `herdr-lab-delegation` | "delegate to claude / codex / opencode / …", "run agents in parallel" — §1 sequence + worktree merge-back + §1.6 batch ledger, §2 verification, §3 recovery, §4/§4.5/§4.6 launch config + tiers, §4.7 fleet composition, §5 sudo pattern |
 | `brainstorm/SKILL.md` | `herdr-lab-brainstorm` | "brainstorm with another agent", "debate these two designs", "devil's advocate", "have the agents argue it out and converge" — R0 draft → R1 anonymized cross-critique → R2 decision round → synthesis + Dissent |
-| `induction/SKILL.md` | `herdr-lab-induction` | "introduce this harness", "refresh the docs-corpus for codex" — capture, optional docs ingest, harness card, one live seat |
+| `induction/SKILL.md` | `herdr-lab-induction` | "introduce this harness", "refresh the docs-corpus for codex" — capture, optional docs ingest, harness card, one live seat; on desktop: guided setup of `desktop/templates/` into `~/.config/herdr-core/templates/` |
 | `desktop/SKILL.md` | `herdr-lab-desktop` | delegate / parallel batch / sudo in the **Herdr desktop app** — `hc` + `herdr-app`, command map from the old CLI |
 | `desktop-mods/SKILL.md` | `herdr-lab-desktop-mods` | customize the desktop window — clone/write mods and layouts, install community ones, port usage meters |
 
@@ -164,9 +166,15 @@ herdr-lab/
 │   ├── README.md            # sub-skill README (public face)
 │   ├── docs-corpus -> ../docs-corpus
 │   └── bin -> ../bin
+├── parallel/
+│   ├── SKILL.md             # herdr-lab-parallel: fan one task out to N seats behind one barrier (independently symlinkable)
+│   ├── README.md            # sub-skill README (public face)
+│   ├── docs-corpus -> ../docs-corpus
+│   └── bin -> ../bin
 ├── desktop/
 │   ├── SKILL.md             # herdr-lab-desktop: hc + herdr-app delegation (independently symlinkable)
 │   ├── README.md
+│   ├── templates/           # lean (read-only, T0/T3) + heavy (T1/T2) seat templates for all corpus harnesses + README + installer docs
 │   ├── docs-corpus -> ../docs-corpus
 │   └── bin -> ../bin
 ├── desktop-mods/
@@ -184,6 +192,7 @@ herdr-lab/
 │   ├── herdr-batch.py       # §1.6 batch ledger (new/set/show/todo)
 │   ├── herdr-capabilities.py # §4.6 local fleet probe (kinds / installed / integration / models / routing check)
 │   ├── herdr-induct.py      # induction capture: --help + version + card skeleton
+│   ├── install-templates.sh # install desktop/templates/*.md into ~/.config/herdr-core/templates/ (no-overwrite)
 │   ├── test_routing_check.py # self-check for the probe's routing validation
 │   └── test_herdr_induct.py # self-check for the capture script
 ├── LICENSE                  # MIT
@@ -217,6 +226,14 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.32.0 (2026-11-17)
+
+**Heavy working tier for the seat templates + per-seat customization in setup.** `desktop/templates/` now ships a second tier alongside the lean read-only one: `pi-heavy` (glm-5.3:cloud, high thinking), `claude-heavy` (opus, high effort, `acceptEdits`), `codex-heavy` (workspace-write, `-a never`), `gemini-heavy` (`auto_edit`), `copilot-heavy` (`--allow-all-tools`, high effort), `opencode-heavy` (config-driven posture), `agy-heavy` (accept-edits, high effort) — intermediate approval posture for supervised T1/T2 work, read-only never claimed where it isn't true (opencode). Lean bodies still forbid edits; heavy bodies allow scoped edits and demand a changed-paths report. The induction setup flow now always walks every installed seat with you after the copy (model / effort / posture — installed copies only, never repo files). Effort-by-tier guidance now stated in `delegation` §4.7.4, `parallel/` and `brainstorm/` (effort on the synthesizing or T2 seat, never uniform max across a fleet). Template frontmatter is plain-scalar YAML (`hc` prints values verbatim).
+
+### v0.31.0 (2026-11-17)
+
+**Lean desktop seat templates + a parallel-subagents mode.** `desktop/templates/` ships ready-made read-only, zero-context-injection seat definitions for every harness in the corpus (`pi-lean`, `claude-lean`, `codex-lean` (read-only sandbox, `-a never`), `gemini-lean`, `copilot-lean`, `opencode-lean`, `agy-lean`) — each is one Markdown file with `name`/`description`/`command` frontmatter, installed by the new `bin/install-templates.sh` (no-overwrite, `--dry-run`/`--only`/`--force`, prints `hc templates` at the end). Nothing is auto-installed: `herdr-lab-induction` gains a desktop section that offers the setup when `~/.config/herdr-core/templates/` is missing/empty, probes what is actually installed (`command -v`, `--version`, `ollama list`, `pi --list-models`), asks which harnesses/providers/models to wire, and only then copies and edits the **installed** copies. New sub-skill **`herdr-lab-parallel`** (`parallel/`): fan one task out to 2-5 independent seats behind a single barrier — independence precheck, per-seat tier/model/effort table (T0/T1 flash + low effort, T3 read-only, one T2 synthesis seat max), shared-quota math (`:cloud` plan caps, VRAM serialization), lean read-only seats preferred for the fan-out, per-subtask acceptance checks before merge. Sits between `herdr-lab-delegation` (heterogeneous deep tasks) and `herdr-lab-brainstorm` (critique rounds). All six sub-skills + router now at 0.31.0. Note: v0.30.0 bumped only `desktop/SKILL.md` and the README badge; this release unifies all versions again.
 
 ### v0.30.0 (2026-11-12)
 
