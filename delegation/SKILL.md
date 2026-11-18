@@ -214,7 +214,7 @@ Fallback: a herdr-delegated sub-agent with no ask-user tool surfaces its recomme
 | Brainstorm — convergent factual check | 2–3 | Evidence-checked, no counting — more seats do not add evidence. |
 | Brainstorm — synthesis / draft | 2–4 | Each seat contributes a section; past 4 the merge cost exceeds the gain. |
 
-**Hard cap: 5 seats.** Beyond that, the user must ask. Every extra seat costs a quota window, a tab, a ledger row, and a round-barrier participant, and it dilutes the relay rather than sharpening it.
+**Hard cap: 5 seats.** Beyond that, the user must ask. Every extra seat costs a quota window, a tab, a ledger row, and a round-barrier participant, and it dilutes the relay rather than sharpening it. **Ledger-enforced (v0.34.0):** `bin/herdr-batch.py set` refuses a new row that would exceed 5 concurrent seats (active = not merged/lost); at the §4.7.6 gate after the user approves, re-run `set` with `--user-approved` — the ledger records the exception (`cap_exception_utc`). Merged/lost rows free their seat, so sequential waves are unaffected.
 
 **Anti-patterns**: padding the fleet to look thorough; running 2 seats when the user asked for one opinion (that is the one-shot of §1, not a fleet); treating a brainstorm's "≥3 seats" voting rule as a target to overshoot.
 

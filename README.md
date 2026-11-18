@@ -228,6 +228,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 
 ## Changelog
 
+### v0.34.0 (2026-11-18)
+
+**Seat cap now ledger-enforced.** The §4.7.2 hard cap of 5 seats existed only as skill prose (`herdr-batch.py` validated row fields, not fleet size). `bin/herdr-batch.py set` now refuses a new row that would exceed **5 concurrent seats** (active rows — not merged/lost) with an error that states the §4.7.6 ask-user gate; after the user approves, re-run with `--user-approved` and the ledger records the exception (`cap_exception_utc`, printed once). Merged/lost rows free their seat, so sequential waves are unaffected; updating existing rows never trips the check. Verified: 5-seat batch refuses a 6th, accepts it with `--user-approved`, frees a seat on terminal state. `delegation/SKILL.md` §4.7.2 documents the enforcement; `parallel/SKILL.md` was NOT updated (skill-memory accumulated-experience gate refused the edit — herdr-lab-parallel used in 0 of 2 sessions; the one-line note is deferred until real use clears the bar).
+
 ### v0.33.0 (2026-11-18)
 
 **Decision-model shadow sidecar (`bin/ollaya-shadow.py`).** After the §4.7 fleet-plan rows land in the ledger, `suggest` asks a local Ollaya daemon (TypeSafe `/v1/systemone` wire format, port 11435, `laya:en`) **two typed questions** per seat — §4.6 tier (T0–T3) and §4.7.4 per-seat thinking/effort level — and writes a sidecar `<ledger>.shadow.json` (suggested tier, effort, per-question confidence, source flags). Division of labour: the decision model owns tier and effort picks; the §4.7.4 table is applied **only as a fallback** when the daemon is unreachable (`effort_source: "table-fallback"`, derived from the row's actual tier; `--no-fallback` errors instead); harness, seat model, quota and family diversity stay with §4.6/§4.7 — suggestions are shadow data, never a launch decision. `report` prints suggestion-vs-actual agreement across batches (table-fallback rows are unscored). Stdlib-only; auto-exposed through each sub-skill's `bin` symlink. Optional: everything degrades to the previous behaviour when no Ollaya daemon exists.

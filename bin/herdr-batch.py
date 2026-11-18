@@ -24,11 +24,21 @@ Row fields:
   verified      §2 output check passed (bool)
   round         brainstorming sub-skill: last completed round (r0/r1/r2/synthesis)
 
+Seat cap (§4.7.2): `set` refuses to create a row past 5 concurrent seats
+(hard cap = active rows, i.e. not merged/lost). That is the ledger-facing
+form of the §4.7.6 ask-user gate: above 5 the orchestrator must have
+explicitly asked; once the user approves, re-run `set` with
+--user-approved and the exception is recorded in the ledger
+(cap_exception_utc). Sequential waves are fine — merged/lost rows free
+their seat for the next wave.
+
 Subcommands:
   new   [--dir DIR]           create a ledger, print its path
   set   FILE --agent NAME [--field NAME=VALUE ...] [--verified BOOL]
+                              [--user-approved]
                               create/update a row; NAME=VALUE where NAME is any
-                              field except agent_name/verified
+                              field except agent_name/verified. --user-approved
+                              records a user-approved over-cap seat (§4.7.2/§4.7.6).
   show  FILE [--md]           print all rows (markdown table with --md)
   todo  FILE                  print rows still needing work (not verified/merged/lost)
 
@@ -64,6 +74,7 @@ FIELDS = (
     "round",
 )
 TERMINAL_STATES = {"merged", "lost"}
+MAX_SEATS = 5  # §4.7.2 hard cap — CONCURRENT seats, not lifetime batch rows
 
 
 def _now():
@@ -105,6 +116,23 @@ def cmd_set(args) -> None:
     path = pathlib.Path(args.file).expanduser()
     data = _load(path)
     rows = data["rows"]
+    if args.agent not in rows:
+        active = sum(
+            1 for r in rows.values() if r.get("state") not in TERMINAL_STATES
+        )
+        if active >= MAX_SEATS:
+            if not args.user_approved:
+                sys.exit(
+                    f"error: adding {args.agent!r} would run {active + 1} concurrent seats — "
+                    f"herdr-batch enforces the §4.7.2 hard cap of {MAX_SEATS}; beyond it "
+                    "the user must be asked (§4.7.6). Ask, then re-run with --user-approved."
+                )
+            data.setdefault("cap_exception_utc", _now())
+            print(
+                f"note: over-cap seat {args.agent!r} recorded with user approval "
+                f"({active + 1} concurrent seats; §4.7.2/§4.7.6)",
+                file=sys.stderr,
+            )
     row = rows.setdefault(
         args.agent,
         {"agent_name": args.agent, "state": "pending", "verified": False},
@@ -173,6 +201,9 @@ def main() -> None:
                        help=f"set one field; repeatable; names: {', '.join(FIELDS)}")
     p_set.add_argument("--verified", metavar="BOOL",
                        help="§2 output check passed (true/false)")
+    p_set.add_argument("--user-approved", action="store_true",
+                       help="record a user-approved over-cap seat (§4.7.2 hard cap; "
+                            "ask first per §4.7.6, then pass this flag)")
     p_set.set_defaults(func=cmd_set)
 
     p_show = sub.add_parser("show", help="print all rows")
