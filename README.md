@@ -9,7 +9,7 @@ Use when the user mentions Herdr, asks to delegate to another agent, run paralle
 **Repository**: https://github.com/cheahhl814/herdr-lab
 
 > [!NOTE]
-> Current version: **v0.32.0** (updated 2026-11-17). The workflow is split into a router master + six independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-parallel` (fan-out seats), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.31.0 adds **lean read-only seat templates for the Herdr desktop** (`desktop/templates/`, installed into `~/.config/herdr-core/templates/` via `bin/install-templates.sh` or the induction-guided setup) and the **parallel subagents mode**. v0.32.0 adds a **heavy working tier** (T1/T2: stronger models, higher effort, intermediate approval posture) alongside the lean read-only tier, and the induction flow now customizes each installed seat with you (model, effort, posture). v0.30.0 mandates **approval flags on every delegated desktop launch** (bare seats stalled at permission prompts under `hc wait`). v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
+> Current version: **v0.33.0** (updated 2026-11-18). The workflow is split into a router master + six independently symlinkable sub-skills: `herdr-lab-delegation` (§1-§5), `herdr-lab-parallel` (fan-out seats), `herdr-lab-brainstorm`, `herdr-lab-induction`, and the desktop pair `herdr-lab-desktop` and `herdr-lab-desktop-mods`. v0.33.0 adds the **decision-model shadow sidecar** (`bin/ollaya-shadow.py`: a local Ollaya daemon can suggest per-seat tier + effort into a ledger sidecar, with the §4.7.4 table as no-ollaya fallback; suggestions are shadow data, never a launch decision). v0.31.0 adds **lean read-only seat templates for the Herdr desktop** (`desktop/templates/`, installed into `~/.config/herdr-core/templates/` via `bin/install-templates.sh` or the induction-guided setup) and the **parallel subagents mode**. v0.32.0 adds a **heavy working tier** (T1/T2: stronger models, higher effort, intermediate approval posture) alongside the lean read-only tier, and the induction flow now customizes each installed seat with you (model, effort, posture). v0.30.0 mandates **approval flags on every delegated desktop launch** (bare seats stalled at permission prompts under `hc wait`). v0.29.0 adds the **Herdr desktop edition** (`hc` + `herdr-app`) beside the old CLI one. v0.25.0 added **fleet composition** (§4.7); v0.26.0 added the **local fleet probe** (`bin/herdr-capabilities.py`) so seat choices are made against the machine's real inventory, plus a README for each sub-skill; v0.28.0 adds **harness induction**, which captures a harness, writes its card, and proves it with one live seat. See [Changelog](#changelog).
 
 ## Contents
 
@@ -79,7 +79,7 @@ ln -sf "$(pwd)/herdr-lab/desktop-mods" ~/.pi/agent/skills/herdr-lab-desktop-mods
 > [!TIP]
 > If your harness reads `~/.agents/skills/` instead of `~/.pi/agent/skills/`, symlink into that directory instead — same links, same names. Both the router (`herdr-lab`) and the six sub-skills (`herdr-lab-delegation`, `herdr-lab-parallel`, `herdr-lab-brainstorm`, `herdr-lab-induction`, `herdr-lab-desktop`, `herdr-lab-desktop-mods`) are then discovered independently, and each sub-skill's `docs-corpus` / `bin` symlinks still resolve.
 
-The skill does **not** install any third-party Python packages at install time. The one tool it ships (`bin/herdr-batch.py`, the §1.6 batch ledger) is stdlib-only.
+The skill does **not** install any third-party Python packages at install time. The tools it ships (`bin/herdr-batch.py`, the §1.6 batch ledger, and `bin/herdr-induct.py`, `bin/herdr-capabilities.py`, `bin/ollaya-shadow.py`) are stdlib-only.
 
 ## Workflow phases
 
@@ -192,6 +192,7 @@ herdr-lab/
 │   ├── herdr-batch.py       # §1.6 batch ledger (new/set/show/todo)
 │   ├── herdr-capabilities.py # §4.6 local fleet probe (kinds / installed / integration / models / routing check)
 │   ├── herdr-induct.py      # induction capture: --help + version + card skeleton
+│   ├── ollaya-shadow.py     # §4.7 decision-model shadow sidecar: tier+effort suggestions + agreement report (optional ollaya; §4.7.4 table fallback)
 │   ├── install-templates.sh # install desktop/templates/*.md into ~/.config/herdr-core/templates/ (no-overwrite)
 │   ├── test_routing_check.py # self-check for the probe's routing validation
 │   └── test_herdr_induct.py # self-check for the capture script
@@ -226,6 +227,10 @@ git rev-parse --verify origin/main             # upstream HEAD
 - **No headless harness launches** — the primary harness never starts another harness in headless/non-interactive mode (`-p`, `--print`, `-ne`, `exec`, piped stdin). Every seat is an interactive `herdr_agent` in a managed pane, where lifecycle, verification (§2), and recovery (§3) apply. This is absolute across all tiers — no headless exception anywhere in the skill.
 
 ## Changelog
+
+### v0.33.0 (2026-11-18)
+
+**Decision-model shadow sidecar (`bin/ollaya-shadow.py`).** After the §4.7 fleet-plan rows land in the ledger, `suggest` asks a local Ollaya daemon (TypeSafe `/v1/systemone` wire format, port 11435, `laya:en`) **two typed questions** per seat — §4.6 tier (T0–T3) and §4.7.4 per-seat thinking/effort level — and writes a sidecar `<ledger>.shadow.json` (suggested tier, effort, per-question confidence, source flags). Division of labour: the decision model owns tier and effort picks; the §4.7.4 table is applied **only as a fallback** when the daemon is unreachable (`effort_source: "table-fallback"`, derived from the row's actual tier; `--no-fallback` errors instead); harness, seat model, quota and family diversity stay with §4.6/§4.7 — suggestions are shadow data, never a launch decision. `report` prints suggestion-vs-actual agreement across batches (table-fallback rows are unscored). Stdlib-only; auto-exposed through each sub-skill's `bin` symlink. Optional: everything degrades to the previous behaviour when no Ollaya daemon exists.
 
 ### v0.32.0 (2026-11-17)
 
