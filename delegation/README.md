@@ -29,7 +29,7 @@ Plain "ask another agent X" is a **one-shot delegation** (§1). A critique / exc
 | **§1** | Delegation sequence: topology → pane check → `herdr_agent start` → prompt + wait → read & verify. Tab-first topology for 2+ agents; concurrent-write isolation via worktrees. |
 | **§1.5** | Worktree merge-back after a multi-writer batch (gate on verification, merge one at a time). |
 | **§1.6** | Batch ledger — `bin/herdr-batch.py`, interruption-survivable state that outlives context compaction. |
-| **§4.7** | Fleet composition: seat count, harness spread, model per seat, budget, ask-user gate — **with the optional decision-model shadow sidecar** (`bin/ollaya-shadow.py`: ollaya picks tier + effort per seat, the §4.7.4 table applies only as a no-ollaya fallback; suggestions are shadow data, never a launch decision). |
+| **§4.7** | Fleet composition: seat count, harness spread, model per seat, budget, ask-user gate. |
 | **§2** | Verification & completion rules — a settled state is not a finished task. |
 | **§3** | Interrupt & error recovery — blocked agents, false settlements, lost agents. |
 | **§4** | Launch configuration: model discovery + quota pre-flight (per-harness list commands, quota probe recipe, `herdr-agent-quota` plugin). |
@@ -76,7 +76,7 @@ If your harness reads `~/.agents/skills/` instead, symlink there instead — sam
 delegation/
 ├── SKILL.md             # this sub-skill — the whole workflow
 ├── docs-corpus -> ../docs-corpus   # shared: herdr CLI + 7 harness captures
-└── bin -> ../bin                   # shared: herdr-batch.py, herdr-capabilities.py, ollaya-shadow.py
+└── bin -> ../bin                   # shared: herdr-batch.py, herdr-capabilities.py
 ```
 
 `docs-corpus/` and `bin/` live once at the repo root; the relative symlinks keep every path inside this file resolving whether the sub-skill is loaded through the router or symlinked standalone.
